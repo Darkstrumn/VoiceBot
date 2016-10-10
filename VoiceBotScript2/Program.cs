@@ -320,143 +320,11 @@ namespace VoiceBotScriptTemplate
                 //>>>>>process based on IPC data
                 for (var intLoop = 1; intLoop < (2 + int_numParams); intLoop++)
                 {
-                    var str_arguments = args[intLoop].Value;
-                    arr_arguments = str_arguments.Split('`');
-                    str_method = args[intLoop].Key;//<<--alias
-                    int_num_subparams = (arr_arguments.Length);
-                    //>>>>>diagnostics
-                    BFS.Speech.TextToSpeech("The number of sub-parameters found was " + int_num_subparams.ToString());
-                    //>>>>>handle requested methods
-                    switch (str_method.ToLower())
-                    {
-                        case "eval":
-                            /*
-                                |eval
-                                    `JettisonAllCargoTriggerLogic
-                                    `if(BFS.ScriptSettings.ReadValue("bln_confirm") == "true"){BFS.Input.SendKeys("{DELETE}");BFS.Speech.TextToSpeech("Commander - All Cargo has been jettisoned, as ordered.");}else{BFS.Speech.TextToSpeech("Commander - The jettisonning of cargo has been belayed, as ordered.");
-                                    `<<NOTE:Here is where references go, if not using any, set to string.Empty:NOTE>>
-                            */
-                            int_expected_num = 3;
-                            //>>>>>arr_arguments[0]; //<<--Descriptive name of code block
-                            //>>>>>arr_arguments[1]; //<<--code block
-                            //>>>>>arr_arguments[2]; //<<--references block <<NOTE:If not using any, set to string.Empty:NOTE>>
-                            if (int_num_subparams == int_expected_num)//>>>>>execute
-                            {
-                                string str_code_block_name = arr_arguments[0];
-                                string str_code_block = arr_arguments[1];
-                                string str_code_block_refs = arr_arguments[2].ToLower() != "null" ? arr_arguments[2] : "";
-                                Includes.VoiceBotSupportClasses.ScriptEngine.Eval(windowHandle, str_code_block_name, str_code_block, str_code_block_refs);
-                            }
-                            else //>>>>>warn
-                            {
-                                VoiceArgcError(str_method.ToUpper(), int_num_subparams, int_expected_num);
-                            }//</if ( int_num_subparams == int_expected_num )>
-                            break;
-
-                        case "vcp":
-                            //>>>>>arr_arguments[0] //<<--storage variable for the VCP response, will be a boolean
-                            //>>>>>arr_arguments[1] //<<--Aural Confirmation Prompt verbiage
-                            //>>>>>arr_arguments[2] //<<--ValidTrue ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-                            //>>>>>arr_arguments[3] //<<--ValidFalse ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-                            //>>>>>arr_arguments[4] //<<--Retries ~ delimited string defining all retry responses to the user prompting them to try again using a response from the valid list of responses. use and empty response to skip retry response attempts, ie give a retry response every 2 retries... .
-                            int_expected_num = 5;
-                            VerbalConfirmationPrompt(ref arr_arguments, int_num_subparams, int_expected_num);
-                            break;
-
-                        case "vip":
-                            //>>>>>arr_arguments[0] //<<--storage variable for the VCP response, will be a boolean
-                            //>>>>>arr_arguments[1] //<<--Aural Input Prompt verbiage
-                            //>>>>>arr_arguments[2] //<<--ValidAccept ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-                            //>>>>>arr_arguments[3] //<<--ValidCancel ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-                            int_expected_num = 4;
-                            VerbalInputPrompt(ref arr_arguments, int_num_subparams, int_expected_num);
-                            break;
-
-                        case "vsp":
-                            //>>>>>arr_arguments[0] //<<--storage variable for the VCP response, will be a boolean
-                            //>>>>>arr_arguments[1] //<<--Aural Input Prompt verbiage
-                            //>>>>>arr_arguments[2] //<<--ValidAccept ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-                            //>>>>>arr_arguments[3] //<<--ValidCancel ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-                            int_expected_num = 4;
-                            VerbalSpellPrompt(ref arr_arguments, int_num_subparams, int_expected_num);
-                            break;
-
-                        case "tts":
-                            int_expected_num = 1;
-                            //>>>>>arr_arguments[0]; //<<--message to speak
-                            if (int_num_subparams == int_expected_num)//>>>>>execute
-                            {
-                                BFS.Speech.TextToSpeech(arr_arguments[0]);
-                            }
-                            else //>>>>>warn
-                            {
-                                VoiceArgcError(str_method.ToUpper(), int_num_subparams, int_expected_num);
-                            }//</if ( int_num_subparams == int_expected_num )>
-                            break;
-
-                        case "initshipstate":
-                            Includes.ShipModel.ResetShipState();
-                            break;
-
-                        case "getshipstate":
-                            int_expected_num = 1;
-                            //>>>>>arr_arguments[0]; //<<--var to get
-                            if (int_num_subparams == int_expected_num)//>>>>>execute
-                            {
-                                if (BFS.ScriptSettings.ReadValue("ShipState").Length < 1) { Includes.ShipModel.ResetShipState(); } else {; }//<<--init if not present
-                                ship_state = Includes.ShipModel.GetState(arr_arguments[0]);
-                            }
-                            else //>>>>>warn
-                            {
-                                VoiceArgcError(str_method.ToUpper(), int_num_subparams, int_expected_num);
-                            }//</if ( (arr_arguments.Length - 1) == 2)>
-                            break;
-
-                        case "setshipstate":
-                            int_expected_num = 2;
-                            //>>>>>arr_arguments[0]; //<<--var to set
-                            //>>>>>arr_arguments[1]; //<<--value to set var to
-                            if (int_num_subparams == int_expected_num)//>>>>>execute
-                            {
-                                if (BFS.ScriptSettings.ReadValue("ShipState").Length < 1) { Includes.ShipModel.ResetShipState(); } else {; }//<<--init if not present
-                                Includes.ShipModel.SetState(arr_arguments[0], arr_arguments[1]);
-                            }
-                            else //>>>>>warn
-                            {
-                                VoiceArgcError(str_method.ToUpper(), int_num_subparams, int_expected_num);
-                            }//</if ( int_num_subparams == int_expected_num )>
-                            break;
-
-                        case "set":
-                            int_expected_num = 2;
-                            //>>>>>arr_arguments[0]; //<<--var to set
-                            //>>>>>arr_arguments[1]; //<<--value to set var to
-                            if (int_num_subparams == int_expected_num)//>>>>>execute
-                            {
-                                Includes.FxLib.SaveArgs(arr_arguments[0], arr_arguments[1].Split('|'));
-                            }
-                            else //>>>>>warn
-                            {
-                                VoiceArgcError(str_method.ToUpper(), int_num_subparams, int_expected_num);
-                            }//</if ( int_num_subparams == int_expected_num )>
-                            break;
-
-                        case "sendkeys":
-                            int_expected_num = 1;
-                            //>>>>>arr_arguments[0]; //<<--key-sequence to send
-                            if (int_num_subparams == int_expected_num)//>>>>>execute
-                            {
-                                BFS.Input.SendKeys(arr_arguments[0]);
-                            }
-                            else //>>>>>warn
-                            {
-                                VoiceArgcError(str_method.ToUpper(), int_num_subparams, int_expected_num);
-                            }//</if ( int_num_subparams == int_expected_num )>
-                            break;
-
-                        default:
-                            break;
-                    }//</switch>
+                    var str_method = args[intLoop].Key;//<<--alias
+                    //var arr_arguments = args[intLoop].Value.Split('`');
+                    //var int_num_subparams = (arr_arguments.Length);
+                    //IntPtr windowHandle
+                    CommandParser(windowHandle, args[intLoop].Key, args[intLoop].Value);
                 }//</for(var intLoop = 0; intLoop < args.Count; intLoop++)>
             }
             else
@@ -470,147 +338,30 @@ namespace VoiceBotScriptTemplate
             //</if ( args.Count != 0 )>
         }/*</Run(IntPtr windowHandle)>*/
 
-        public static void CommandParser(string str_arguments, string str_method)
+        public static void CommandParser(IntPtr windowHandle, string str_method, string str_arguments)
         {
-            var int_expected_num = -1;
-            var ship_state = string.Empty;
-
             var arr_arguments = str_arguments.Split('`');
             var int_num_subparams = (arr_arguments.Length);
             //>>>>>diagnostics
             BFS.Speech.TextToSpeech("The number of sub-parameters found was " + int_num_subparams.ToString());
             //>>>>>handle requested methods
-            switch (str_method.ToLower())
-            {
-                case "eval":
-                    /*
-                        |eval
-                            `JettisonAllCargoTriggerLogic
-                            `if(BFS.ScriptSettings.ReadValue("bln_confirm") == "true"){BFS.Input.SendKeys("{DELETE}");BFS.Speech.TextToSpeech("Commander - All Cargo has been jettisoned, as ordered.");}else{BFS.Speech.TextToSpeech("Commander - The jettisonning of cargo has been belayed, as ordered.");
-                            `<<NOTE:Here is where references go, if not using any, set to string.Empty:NOTE>>
-                    */
-                    int_expected_num = 3;
-                    //>>>>>arr_arguments[0]; //<<--Descriptive name of code block
-                    //>>>>>arr_arguments[1]; //<<--code block
-                    //>>>>>arr_arguments[2]; //<<--references block <<NOTE:If not using any, set to string.Empty:NOTE>>
-                    if (int_num_subparams == int_expected_num)//>>>>>execute
-                    {
-                        string str_code_block_name = arr_arguments[0];
-                        string str_code_block = arr_arguments[1];
-                        string str_code_block_refs = arr_arguments[2].ToLower() != "null" ? arr_arguments[2] : "";
-                        Includes.VoiceBotSupportClasses.ScriptEngine.Eval(windowHandle, str_code_block_name, str_code_block, str_code_block_refs);
-                    }
-                    else //>>>>>warn
-                    {
-                        VoiceArgcError(str_method.ToUpper(), int_num_subparams, int_expected_num);
-                    }//</if ( int_num_subparams == int_expected_num )>
-                    break;
+            var actions = new Dictionary<string, Delegate>();
 
-                case "vcp":
-                    //>>>>>arr_arguments[0] //<<--storage variable for the VCP response, will be a boolean
-                    //>>>>>arr_arguments[1] //<<--Aural Confirmation Prompt verbiage
-                    //>>>>>arr_arguments[2] //<<--ValidTrue ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-                    //>>>>>arr_arguments[3] //<<--ValidFalse ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-                    //>>>>>arr_arguments[4] //<<--Retries ~ delimited string defining all retry responses to the user prompting them to try again using a response from the valid list of responses. use and empty response to skip retry response attempts, ie give a retry response every 2 retries... .
-                    int_expected_num = 5;
-                    VerbalConfirmationPrompt(ref arr_arguments, int_num_subparams, int_expected_num);
-                    break;
+            actions.Add("eval", new Func<IntPtr, string[], int, string>(Eval));
+            actions.Add("VerbalConfirmationPrompt", new Func<IntPtr, string[], int, string>(VerbalConfirmationPrompt));
+            actions.Add("VerbalInputPrompt", new Func<IntPtr, string[], int, string>(VerbalInputPrompt));
+            actions.Add("VerbalSpellPrompt", new Func<IntPtr, string[], int, string>(VerbalSpellPrompt));
 
-                case "vip":
-                    //>>>>>arr_arguments[0] //<<--storage variable for the VCP response, will be a boolean
-                    //>>>>>arr_arguments[1] //<<--Aural Input Prompt verbiage
-                    //>>>>>arr_arguments[2] //<<--ValidAccept ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-                    //>>>>>arr_arguments[3] //<<--ValidCancel ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-                    int_expected_num = 4;
-                    VerbalInputPrompt(ref arr_arguments, int_num_subparams, int_expected_num);
-                    break;
+            actions.Add("texttospeech", new Func<IntPtr, string[], int, string>(TextToSpeech));
+            actions.Add("initshipstate", new Func<IntPtr, string[], int, string>(InitShipState));
+            actions.Add("getshipstate", new Func<IntPtr, string[], int, string>(GetShipState));
+            actions.Add("setshipstate", new Func<IntPtr, string[], int, string>(SetShipState));
+            actions.Add("setvalue", new Func<IntPtr, string[], int, string>(SetValue));
+            actions.Add("sendkeys", new Func<IntPtr, string[], int, string>(SendKeys));
 
-                case "vsp":
-                    //>>>>>arr_arguments[0] //<<--storage variable for the VCP response, will be a boolean
-                    //>>>>>arr_arguments[1] //<<--Aural Input Prompt verbiage
-                    //>>>>>arr_arguments[2] //<<--ValidAccept ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-                    //>>>>>arr_arguments[3] //<<--ValidCancel ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-                    int_expected_num = 4;
-                    VerbalSpellPrompt(ref arr_arguments, int_num_subparams, int_expected_num);
-                    break;
-
-                case "tts":
-                    int_expected_num = 1;
-                    //>>>>>arr_arguments[0]; //<<--message to speak
-                    if (int_num_subparams == int_expected_num)//>>>>>execute
-                    {
-                        BFS.Speech.TextToSpeech(arr_arguments[0]);
-                    }
-                    else //>>>>>warn
-                    {
-                        VoiceArgcError(str_method.ToUpper(), int_num_subparams, int_expected_num);
-                    }//</if ( int_num_subparams == int_expected_num )>
-                    break;
-
-                case "initshipstate":
-                    Includes.ShipModel.ResetShipState();
-                    break;
-
-                case "getshipstate":
-                    int_expected_num = 1;
-                    //>>>>>arr_arguments[0]; //<<--var to get
-                    if (int_num_subparams == int_expected_num)//>>>>>execute
-                    {
-                        if (BFS.ScriptSettings.ReadValue("ShipState").Length < 1) { Includes.ShipModel.ResetShipState(); } else {; }//<<--init if not present
-                        ship_state = Includes.ShipModel.GetState(arr_arguments[0]);
-                    }
-                    else //>>>>>warn
-                    {
-                        VoiceArgcError(str_method.ToUpper(), int_num_subparams, int_expected_num);
-                    }//</if ( (arr_arguments.Length - 1) == 2)>
-                    break;
-
-                case "setshipstate":
-                    int_expected_num = 2;
-                    //>>>>>arr_arguments[0]; //<<--var to set
-                    //>>>>>arr_arguments[1]; //<<--value to set var to
-                    if (int_num_subparams == int_expected_num)//>>>>>execute
-                    {
-                        if (BFS.ScriptSettings.ReadValue("ShipState").Length < 1) { Includes.ShipModel.ResetShipState(); } else {; }//<<--init if not present
-                        Includes.ShipModel.SetState(arr_arguments[0], arr_arguments[1]);
-                    }
-                    else //>>>>>warn
-                    {
-                        VoiceArgcError(str_method.ToUpper(), int_num_subparams, int_expected_num);
-                    }//</if ( int_num_subparams == int_expected_num )>
-                    break;
-
-                case "set":
-                    int_expected_num = 2;
-                    //>>>>>arr_arguments[0]; //<<--var to set
-                    //>>>>>arr_arguments[1]; //<<--value to set var to
-                    if (int_num_subparams == int_expected_num)//>>>>>execute
-                    {
-                        Includes.FxLib.SaveArgs(arr_arguments[0], arr_arguments[1].Split('|'));
-                    }
-                    else //>>>>>warn
-                    {
-                        VoiceArgcError(str_method.ToUpper(), int_num_subparams, int_expected_num);
-                    }//</if ( int_num_subparams == int_expected_num )>
-                    break;
-
-                case "sendkeys":
-                    int_expected_num = 1;
-                    //>>>>>arr_arguments[0]; //<<--key-sequence to send
-                    if (int_num_subparams == int_expected_num)//>>>>>execute
-                    {
-                        BFS.Input.SendKeys(arr_arguments[0]);
-                    }
-                    else //>>>>>warn
-                    {
-                        VoiceArgcError(str_method.ToUpper(), int_num_subparams, int_expected_num);
-                    }//</if ( int_num_subparams == int_expected_num )>
-                    break;
-
-                default:
-                    break;
-            }//</switch>
+            var action = actions.Where(a => a.Key.ToLower() == str_method.ToLower()).Select(act => act.Value.DynamicInvoke(new { windowHandle, arr_arguments, int_num_subparams }));
         }
+
         //-------------------------------------------------------------------------
         /// <summary>
         /// when the construct is used with IPC subcommands, this is the arugments # error handler
@@ -618,16 +369,47 @@ namespace VoiceBotScriptTemplate
         /// <param name="str_method"></param>
         /// <param name="int_num_args"></param>
         /// <param name="int_expected_num"></param>
-        public static void VoiceArgcError(string str_method, int int_num_args, int int_expected_num)
+        private static void VoiceArgcError(IntPtr windowHandle, string str_method, int int_num_args, int int_expected_num)
         {
             /*Customize audio error as desired*/
             BFS.Speech.TextToSpeech(str_script_name + " Error detected in {METHOD}" + str_method + " parameters, number of arguments provided was {NUM}".Replace("{METHOD", str_method).Replace("NUM}", int_num_args.ToString()));
             BFS.Speech.TextToSpeech("Number of arguments expected is {NUM}".Replace("NUM}", int_expected_num.ToString()));
         }/*</VoiceArgcError(string str_method, int int_num_args, int int_expected_num)>*/
 
-        //-------------------------------------------------------------------------
+        public static string Eval(IntPtr windowHandle, string[] arr_arguments, int int_num_subparams)
+        {
+            /*
+                |eval
+                    `JettisonAllCargoTriggerLogic
+                    `if(BFS.ScriptSettings.ReadValue("bln_confirm") == "true"){BFS.Input.SendKeys("{DELETE}");BFS.Speech.TextToSpeech("Commander - All Cargo has been jettisoned, as ordered.");}else{BFS.Speech.TextToSpeech("Commander - The jettisonning of cargo has been belayed, as ordered.");
+                    `<<NOTE:Here is where references go, if not using any, set to string.Empty:NOTE>>
+            */
+            var int_expected_num = 3;
+            var returnValue = "ok";
+            //>>>>>arr_arguments[0]; //<<--Descriptive name of code block
+            //>>>>>arr_arguments[1]; //<<--code block
+            //>>>>>arr_arguments[2]; //<<--references block <<NOTE:If not using any, set to string.Empty:NOTE>>
+            if (int_num_subparams == int_expected_num)//>>>>>execute
+            {
+                var str_code_block_name = arr_arguments[0];
+                var str_code_block = arr_arguments[1];
+                var str_code_block_refs = arr_arguments[2].ToLower() != "null" ? arr_arguments[2] : "";
+                Includes.VoiceBotSupportClasses.ScriptEngine.Eval(windowHandle, str_code_block_name, str_code_block, str_code_block_refs);
+            }
+            else //>>>>>warn
+            {
+                VoiceArgcError(windowHandle, "EVAL", int_num_subparams, int_expected_num);
+            }//</if ( int_num_subparams == int_expected_num )>
+            return returnValue;
+        }
+
         /*
         -Verbal Confirmation Prompt(VCP): used typically for simple confirmation prompting
+        arr_arguments[0] //<<--storage variable for the VCP response, will be a boolean
+        arr_arguments[1] //<<--Aural Confirmation Prompt verbiage
+        arr_arguments[2] //<<--ValidTrue ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
+        arr_arguments[3] //<<--ValidFalse ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
+        arr_arguments[4] //<<--Retries ~ delimited string defining all retry responses to the user prompting them to try again using a response from the valid list of responses. use and empty response to skip retry response attempts, ie give a retry response every 2 retries... .
         Example use and parameter organization:
         Calling macro is called JettisonAllCargo, a non-toggle macro requiring confirmation of the action to proceed.
         An IPC message is setup to have the AOSCore process the VCP request and responding action
@@ -659,12 +441,14 @@ namespace VoiceBotScriptTemplate
         ///>>>>>arr_arguments[4] //<<--Retries ~ delimited string defining all retry responses to the user prompting them to try again using a response from the valid list of responses. use and empty response to skip retry response attempts, ie give a retry response every 2 retries... .
         /// <param name="int_num_subparams"></param>
         /// <param name="int_expected_num"></param>
-        public static string VerbalConfirmationPrompt(ref string[] arr_arguments, int int_num_subparams, int int_expected_num)
+        public static string VerbalConfirmationPrompt(IntPtr windowHandle, string[] arr_arguments, int int_num_subparams)
         {
-            string str_return = "ok";
+            var returnValue = "ok";
+            var int_expected_num = 5;
             //>>>>>validate
             if (int_num_subparams == int_expected_num)//>>>>>execute
             {
+                var str_method = arr_arguments[1];
                 var arr_str_valid_true = arr_arguments[2].Split('~');
                 var arr_str_valid_false = arr_arguments[3].Split('~');
                 var arr_str_retry_prompts = arr_arguments[4].Split('~');
@@ -733,21 +517,24 @@ namespace VoiceBotScriptTemplate
                 {
                     BFS.Speech.TextToSpeech("Commander, response accepted.");
                     BFS.ScriptSettings.WriteValue(arr_arguments[0], (bln_confirmation ? "true" : "false"));
-                    str_return += ":" + bln_confirmation.ToString();
+                    returnValue += ":" + bln_confirmation.ToString();
                 }
-                else { str_return += ":" + bln_confirmation.ToString(); }//>>>>>rejected
-                                                                         //</if(bln_valid_response)>
+                else { returnValue += ":" + bln_confirmation.ToString(); }//>>>>>rejected
+                                                                          //</if(bln_valid_response)>
             }
             else //>>>>>warn
             {
-                VoiceArgcError("", int_num_subparams, int_expected_num);
-                str_return = "error:{ERROR}".Replace("{ERROR}", "Invalid number of arguments.");
+                VoiceArgcError(windowHandle, "", int_num_subparams, int_expected_num);
+                returnValue = "error:{ERROR}".Replace("{ERROR}", "Invalid number of arguments.");
             }//</if ( int_num_subparams == int_expected_num )>
-            return (str_return);
+            return returnValue;
         }//</VerbalConfirmationPrompt>
 
-        //-------------------------------------------------------------------------
         /*
+        arr_arguments[0] //<<--storage variable for the VCP response, will be a boolean
+        arr_arguments[1] //<<--Aural Input Prompt verbiage
+        arr_arguments[2] //<<--ValidAccept ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
+        arr_arguments[3] //<<--ValidCancel ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
         Example use and parameter organization:
         Calling macro is called NameShip, a non-toggle macro requiring verbal input of the ships name.
         An IPC message is setup to have the AOSCore process the VIP request and responding action
@@ -771,19 +558,20 @@ namespace VoiceBotScriptTemplate
         ///>>>>>arr_arguments[3] //<<--ValidCancel ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
         /// <param name="int_num_subparams"></param>
         /// <param name="int_expected_num"></param>
-        public static string VerbalInputPrompt(ref string[] arr_arguments, int int_num_subparams, int int_expected_num)
+        public static string VerbalInputPrompt(IntPtr windowHandle, string[] arr_arguments, int int_num_subparams)
         {
-            string str_return = "ok";
+            var returnValue = "ok";
+            var int_expected_num = 4;
             //>>>>>validate
             if (int_num_subparams == int_expected_num)//>>>>>execute
             {
-                string[] arr_str_valid_accept = "Accept~Submit~Confirm~Done".Split('~');
-                string[] arr_str_valid_cancel = "Abort~Cancel".Split('~');
-                string str_user_response = "";
-                string str_result = "";
-                bool bln_valid_response = true;
-                bool bln_quit = false;
-                bool bln_accepted = false;
+                var arr_str_valid_accept = "Accept~Submit~Confirm~Done".Split('~');
+                var arr_str_valid_cancel = "Abort~Cancel".Split('~');
+                var str_user_response = "";
+                var str_result = "";
+                var bln_valid_response = true;
+                var bln_quit = false;
+                var bln_accepted = false;
 
                 BFS.Speech.TextToSpeech(arr_arguments[0]);//<<--initial aural prompt
 
@@ -834,22 +622,25 @@ namespace VoiceBotScriptTemplate
                     {
                         BFS.Speech.TextToSpeech("Commander, response accepted.");
                         BFS.ScriptSettings.WriteValue(arr_arguments[0], str_result);
-                        str_return += ":" + str_result;
+                        returnValue += ":" + str_result;
                     }
-                    else { str_return = "cancelled"; }//>>>>>do nothing
-                                                      //</if(bln_accepted)>
+                    else { returnValue = "cancelled"; }//>>>>>do nothing
+                                                       //</if(bln_accepted)>
                 }//</foreach ( string str_valid_accept in arr_str_valid_accept )>
             }//</true>
             else //>>>>>warn
             {
-                VoiceArgcError("Verbal Input Prompt(VIP)", int_num_subparams, int_expected_num);
-                str_return = "error:{ERROR}".Replace("{ERROR}", "Invalid number of arguments.");
+                VoiceArgcError(windowHandle, "Verbal Input Prompt(VIP)", int_num_subparams, int_expected_num);
+                returnValue = "error:{ERROR}".Replace("{ERROR}", "Invalid number of arguments.");
             }//</if ( int_num_subparams == int_expected_num )>
-            return (str_return);
+            return returnValue;
         }//</VerbalInputPrompt>
 
-        //-------------------------------------------------------------------------
         /*
+        arr_arguments[0] //<<--storage variable for the VCP response, will be a boolean
+        arr_arguments[1] //<<--Aural Input Prompt verbiage
+        arr_arguments[2] //<<--ValidAccept ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
+        arr_arguments[3] //<<--ValidCancel ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
         Example use and parameter organization:
         Calling macro is called NameShip, a non-toggle macro requiring verbal input of the ships name.
         An IPC message is setup to have the AOSCore process the VIP request and responding action
@@ -873,19 +664,20 @@ namespace VoiceBotScriptTemplate
         ///>>>>>arr_arguments[3] //<<--ValidCancel ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
         /// <param name="int_num_subparams"></param>
         /// <param name="int_expected_num"></param>
-        public static string VerbalSpellPrompt(ref string[] arr_arguments, int int_num_subparams, int int_expected_num)
+        public static string VerbalSpellPrompt(IntPtr windowHandle, string[] arr_arguments, int int_num_subparams)
         {
-            string str_return = "ok";
+            var returnValue = "ok";
+            var int_expected_num = 4;
             //>>>>>validate
             if (int_num_subparams == int_expected_num)//>>>>>execute
             {
-                string[] arr_str_valid_accept = "Accept~Submit~Confirm~Done".Split('~');
-                string[] arr_str_valid_cancel = "Abort~Cancel".Split('~');
-                string str_user_response = "";
-                string str_result = "";
-                bool bln_valid_response = true;
-                bool bln_quit = false;
-                bool bln_accepted = false;
+                var arr_str_valid_accept = "Accept~Submit~Confirm~Done".Split('~');
+                var arr_str_valid_cancel = "Abort~Cancel".Split('~');
+                var str_user_response = "";
+                var str_result = "";
+                var bln_valid_response = true;
+                var bln_quit = false;
+                var bln_accepted = false;
 
                 BFS.Speech.TextToSpeech(arr_arguments[0]);//<<--initial aural prompt
 
@@ -936,24 +728,117 @@ namespace VoiceBotScriptTemplate
                     {
                         BFS.Speech.TextToSpeech("Commander, response accepted.");
                         BFS.ScriptSettings.WriteValue(arr_arguments[0], str_result);
-                        str_return += ":" + str_result;
+                        returnValue += ":" + str_result;
                     }
-                    else { str_return = "cancelled"; }//>>>>>do nothing
-                                                      //</if(bln_accepted)>
+                    else { returnValue = "cancelled"; }//>>>>>do nothing
+                                                       //</if(bln_accepted)>
                 }//</foreach ( string str_valid_accept in arr_str_valid_accept )>
             }//</true>
             else //>>>>>warn
             {
-                VoiceArgcError("Verbal Input Prompt(VIP)", int_num_subparams, int_expected_num);
-                str_return = "error:{ERROR}".Replace("{ERROR}", "Invalid number of arguments.");
+                VoiceArgcError(windowHandle, "Verbal Input Prompt(VIP)", int_num_subparams, int_expected_num);
+                returnValue = "error:{ERROR}".Replace("{ERROR}", "Invalid number of arguments.");
             }//</if ( int_num_subparams == int_expected_num )>
-            return (str_return);
+            return returnValue;
         }//</VerbalSpellPrompt>
 
-        //-------------------------------------------------------------------------
-        //-------------------------------------------------------------------------
-        //-------------------------------------------------------------------------
-    }/*</class::VoiceBotScript>*/
+        public static string TextToSpeech(IntPtr windowHandle, string[] arr_arguments, int int_num_subparams)
+        {
+            var str_method = arr_arguments[1];
+            var int_expected_num = 1;
+            var returnValue = "ok";
+            //>>>>>arr_arguments[0]; //<<--message to speak
+            if (int_num_subparams == int_expected_num)//>>>>>execute
+            {
+                BFS.Speech.TextToSpeech(arr_arguments[0]);
+            }
+            else //>>>>>warn
+            {
+                VoiceArgcError(windowHandle, str_method.ToUpper(), int_num_subparams, int_expected_num);
+            }//</if ( int_num_subparams == int_expected_num )>
+            return returnValue;
+        }
+
+        public static string InitShipState(IntPtr windowHandle, string[] arr_arguments, int int_num_subparams)
+        {
+            var returnValue = "ok";
+            Includes.ShipModel.ResetShipState();
+            return returnValue;
+        }
+
+        public static string GetShipState(IntPtr windowHandle, string[] arr_arguments, int int_num_subparams)
+        {
+            var str_method = arr_arguments[1];
+            var int_expected_num = 1;
+            var returnValue = "ok";
+            //>>>>>arr_arguments[0]; //<<--var to get
+            if (int_num_subparams == int_expected_num)//>>>>>execute
+            {
+                if (BFS.ScriptSettings.ReadValue("ShipState").Length < 1) { Includes.ShipModel.ResetShipState(); } else {; }//<<--init if not present
+                returnValue = Includes.ShipModel.GetState(arr_arguments[0]);
+            }
+            else //>>>>>warn
+            {
+                VoiceArgcError(windowHandle, str_method.ToUpper(), int_num_subparams, int_expected_num);
+            }//</if ( (arr_arguments.Length - 1) == 2)>
+            return returnValue;
+        }
+
+        public static string SetShipState(IntPtr windowHandle, string[] arr_arguments, int int_num_subparams)
+        {
+            var str_method = arr_arguments[1];
+            var int_expected_num = 2;
+            var returnValue = "ok";
+            //>>>>>arr_arguments[0]; //<<--var to set
+            //>>>>>arr_arguments[1]; //<<--value to set var to
+            if (int_num_subparams == int_expected_num)//>>>>>execute
+            {
+                if (BFS.ScriptSettings.ReadValue("ShipState").Length < 1) { Includes.ShipModel.ResetShipState(); } else {; }//<<--init if not present
+                Includes.ShipModel.SetState(arr_arguments[0], arr_arguments[1]);
+            }
+            else //>>>>>warn
+            {
+                VoiceArgcError(windowHandle, str_method.ToUpper(), int_num_subparams, int_expected_num);
+            }//</if ( int_num_subparams == int_expected_num )>
+            return returnValue;
+        }
+
+        public static string SetValue(IntPtr windowHandle, string[] arr_arguments, int int_num_subparams)
+        {
+            var str_method = arr_arguments[1];
+            var int_expected_num = 2;
+            var returnValue = "ok";
+            //>>>>>arr_arguments[0]; //<<--var to set
+            //>>>>>arr_arguments[1]; //<<--value to set var to
+            if (int_num_subparams == int_expected_num)//>>>>>execute
+            {
+                Includes.FxLib.SaveArgs(arr_arguments[0], arr_arguments[1].Split('|'));
+            }
+            else //>>>>>warn
+            {
+                VoiceArgcError(windowHandle, str_method.ToUpper(), int_num_subparams, int_expected_num);
+            }//</if ( int_num_subparams == int_expected_num )>
+            return returnValue;
+        }
+
+        public static string SendKeys(IntPtr windowHandle, string[] arr_arguments, int int_num_subparams)
+        {
+            var str_method = arr_arguments[1];
+            var int_expected_num = 1;
+            var returnValue = "ok";
+            //>>>>>arr_arguments[0]; //<<--key-sequence to send
+            if (int_num_subparams == int_expected_num)//>>>>>execute
+            {
+                BFS.Input.SendKeys(arr_arguments[0]);
+            }
+            else //>>>>>warn
+            {
+                VoiceArgcError(windowHandle, str_method.ToUpper(), int_num_subparams, int_expected_num);
+            }//</if ( int_num_subparams == int_expected_num )>
+            return returnValue;
+        }
+
+    }
 
     //=============================================================================
     //==/main
