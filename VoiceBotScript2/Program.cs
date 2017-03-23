@@ -23,14 +23,36 @@ using Microsoft.CSharp; //<<--in system.dll
 //=============================================================================
 /*
  * Disclaimer:
+ * This file is both for show & tell, and for documentation: an example  VoiceBot
+ * script lab environment.
+ * 
  * Normally It is one class per file, however, as this is intended to not only be
  * functional, but to demonstrate voicebot sscript scaffolding and building using
- * the construct, so one file served the purpose. Once in your build environment,
- * you can deconstuct the file into a proper project space one class per file, etc.
+ * the construct in the VisualStudio (2015) environment; so one file served the 
+ * purpose.
+ * Once in your build environment,
+ * you can deconstuct the file into a proper project space one class per file, 
+ * de-clutter of documentation comments, etc.
 */
 //=============================================================================
 namespace VoiceBotScriptTemplate
   {
+  /*
+   * The VS environment is built as a console app, and the base class is the
+   * static class Program, with Main as the entry-point (typical)
+   * The VoiceBotScript class,located in the region marked main, is intended to
+   *  emulate the VoiceBot script space .Run(new IntPtr())  is the entry-point.
+   * 
+   * Once the script core is built, you should be able to copy, paste the region
+   * marked main, into the VoiceBot script editor (copy paste the refeerences
+   * string into the references input box, and make any "minor" adjustments for
+   * environment differences, and the script should work just as it did int he
+   * scaffold environment, with the benefit of the BFS calls doing their real
+   * work, registry manipulation, sendkeys, the whole-lot.
+   * 
+   * An entire complext macro script chain can be built here and tested outside of the VoiceBot system, however a 
+   * purchased VoiceBot install is required for references to work proper.
+   */
   public static class Program
     {
     private static void Main(string[] args)
@@ -45,7 +67,11 @@ namespace VoiceBotScriptTemplate
   //==Development Scaffolding Support Classes
   //=============================================================================
   /// <summary>
-  /// developmental\\scaffolding stub for binary fortress services class while in development (outside of voicebot editor> ie visual studio (for intellisense and such purposes)
+  /// developmental\\scaffolding stub for binary fortress services class while in 
+  /// development (outside of voicebot editor> ie Visual Studio 
+  /// (for intellisense and such purposes)
+  /// (These should require any modification, however you are free to do so as
+  /// desired.
   /// </summary>
   namespace BFS
     {
@@ -261,13 +287,28 @@ namespace VoiceBotScriptTemplate
     {
     #region private vars
 
-    private static string script_name = "AOSCore";
+    private static string script_name = "AOSCore"; //<<--used to alias and have only one place to change when the name\\project changes
 
     #endregion private vars
 
     //---------------------------------------------------------------------------
     /// <summary>
     /// Author: Darkstrumn:\created::160107.13
+    /// (
+    /// This is a practical example, the reason I crafted this in the first place
+    /// In this example, I wanted to build the ship AI verbal interface similar
+    /// to what was getting done with Voice Attack, but that I wasn't seeing for
+    /// VoiceBot which seemed to have the superior macro environment due impart
+    /// to the use of C# as the scripting language, making the VoiceBot infinitely
+    /// powerful for nearly anything.
+    /// 
+    /// I wanted afew core components that would allow the crafting of powerful and
+    /// flexible macros with high code reusabilty through macro chaining and IPC
+    /// via the BFS variable system.
+    /// Access to db functionality is also available (in this example, an mdb file
+    /// is used as a log book DB for trading, etc., but you could make anything.
+    /// This following is the result:
+    /// )
     /// Function: The Aural-OS Core is the workhorse of the macroscript system.
     ///           The system is typically 2 part, the caller, handles the interface
     ///           side of the system, doing random response, and such, then sends
@@ -275,6 +316,9 @@ namespace VoiceBotScriptTemplate
     ///           that are then executed from this script.
     ///           This systems allows the core logic to be in one script callable by
     ///           other scripts, easy to maintain, and add to.
+    ///           While Random response can be handled by VoiceBot now, it can
+    ///           also be specifically coded if the macro workflow demands it, or
+    ///           that is your thing.
     /// <summary>
     /// <param name="windowHandle"></param>
     public static void Run(IntPtr windowHandle)
@@ -335,6 +379,12 @@ namespace VoiceBotScriptTemplate
         { Includes.FxLib.SaveArgs(ipc_var_name, null); }//<<--"delete" the value (I think the registry key remains...)
       }
 
+    /*
+     * The command parser is the core of the AOS function routing.
+     * It uses a Function Dictionary to negate the need to use switch or if blocks
+     * to navigate the available functions at the Developers command.
+     * Note: all the diagnostic section can be removed once of no use
+     */
     public static void CommandParser(IntPtr windowHandle, string method, string arguments)
       {
       var arrMethodArguments = arguments.Split('`');
@@ -343,12 +393,12 @@ namespace VoiceBotScriptTemplate
       BFS.Speech.TextToSpeech("The number of sub-parameters found was " + numberOfSubParams.ToString());
       //>>>>>handle requested methods using function dictionary to refactor-out long switch statement, signatures made uniform for covenience
       var actions = new Dictionary<string, Delegate>();
-      //>>>>>complex functions
+      //>>>>>complex functions - heavy logic functions that can possibly be improved, but are the core of the AOS
       actions.Add("eval", new Func<IntPtr, string[], int, string>(Eval));
       actions.Add("verbalconfirmationprompt", new Func<IntPtr, string[], int, string>(VerbalConfirmationPrompt));
       actions.Add("verbalinputprompt", new Func<IntPtr, string[], int, string>(VerbalInputPrompt));
       actions.Add("verbalspellprompt", new Func<IntPtr, string[], int, string>(VerbalSpellPrompt));
-      //>>>>>simple functions
+      //>>>>>simple functions - lighter functions often in support of the complex functions
       actions.Add("texttospeech", new Func<IntPtr, string[], int, string>(TextToSpeech));
       actions.Add("initshipstate", new Func<IntPtr, string[], int, string>(InitShipState));
       actions.Add("getshipstate", new Func<IntPtr, string[], int, string>(GetShipState));
@@ -365,6 +415,7 @@ namespace VoiceBotScriptTemplate
 
     /// <summary>
     /// when the construct is used with IPC subcommands, this is the arugments # error handler
+    /// used mainly for dev (production grade code should not trigger this handler ;-P )
     /// </summary>
     /// <param name="method"></param>
     /// <param name="num_args"></param>
@@ -826,15 +877,21 @@ namespace VoiceBotScriptTemplate
   //== Includes Classes
   //=============================================================================
   /// <summary>
+  /// This part is part of the scaffold, only the bits in the main region are for
+  /// the VoiceBot script editor when copy-pasting.
+  /// 
+  /// Note: The Constants.default_references may also need to be copy-pasted into the
+  /// references input box in the VoiceBot Script Editor.
+  /// 
   /// Includes
-  /// How it works: includes are accomplished using the ScriptEngine coded above to
-  /// in-line compile the "include" code into an assembly in memory. The in-memory
-  /// assembly is then accessed directly or via delegates that connect the includes code to the
-  /// Includes namespace.
+  /// How it works: includes are accomplished using the ScriptEngine coded below
+  /// in the region marked "Support Classes" to in-line compile the "include" code
+  /// into an assembly in memory. The in-memory assembly is then accessed directly
+  /// or via delegates that connect the includes code to the Includes namespace.
   /// calls can then be made fully qualifying the call ie:
   /// string confirmation_response = Includes.Speech.SpeechRecognizer("Are your sure?");
   /// or directly:
-  /// Assembly assem_Speech = (Assembly)Includes.VoiceBotSupportClasses.ScriptEngine.LoadInclude(new IntPtr(),"Include_DarkLibs",Includes.VoiceBotSupportClasses.Constants.default_references)).GetTypes().Where( x => x.FullName.Contains("Includes.Speech");
+  /// var assem_Speech = (Assembly)Includes.VoiceBotSupportClasses.ScriptEngine.LoadInclude(new IntPtr(),"Include_DarkLibs",Includes.VoiceBotSupportClasses.Constants.default_references)).GetTypes().Where( x => x.FullName.Contains("Includes.Speech");
   /// string confirmation_response = (string)CallFunction(assem_Speech, "SpeechRecognizer", new object[] {"Are your sure?"})
   /// -----------------------------------------------------------------------
   /// Usings: using System.IO;//<<--text file io for loading includes files
@@ -843,7 +900,13 @@ namespace VoiceBotScriptTemplate
   /// cs code loaded via LoadIncludes(), and\or the VoiceBot registry variables loaded
   /// via GetIncludes(). The latter is more portable, easier to edit and backup,
   /// however, the former, is more compact and self-contained being stored in the
-  /// registry. The choice is yours on which to use.
+  /// registry, but must be exported from the registry to backup, and or share.
+  /// The choice is yours on which to use.
+  /// There are 2 example include files Includ_DarkLibs the Script Engine is the only
+  /// bit that was duplicated in the include for the include, as the internal scaffolding
+  /// ScriptEngine is how the script code even gets called, so it was a neccessary evil.
+  /// in this file, but were made into a proof of concept to see if includes could
+  /// be made. Yes, they can!
   /// </summary>
   namespace Includes
     {
@@ -901,10 +964,10 @@ namespace VoiceBotScriptTemplate
           {
           StringBuilder sb_script_core = new StringBuilder("");
           object[] obj_parameters_array;
-          string class_name = "TriggerLogic";
-          string function_name = "{CLASS}.Run".Replace("{CLASS}", class_name);
-          string code;
-          string code_template = @"
+          var class_name = "TriggerLogic";
+          var function_name = "{CLASS}.Run".Replace("{CLASS}", class_name);
+          var code = "";
+          var code_template = @"
 //=============================================================================
 //=={CODEBLOCKNAME}
 //=============================================================================
@@ -945,7 +1008,7 @@ namespace Includes
           code = code.Replace("{CODEBLOCKNAME}", codeBlockName);
           code = code.Replace("{REFERENCES}", Includes.VoiceBotSupportClasses.Constants.default_references);
           sb_script_core.Append(code);
-          Assembly assembly_trigger_logic = (Assembly)ScriptEngine.CsCodeAssembler(windowHandle, codeBlockName, sb_script_core.ToString(), references = "");
+          var assembly_trigger_logic = (Assembly)ScriptEngine.CsCodeAssembler(windowHandle, codeBlockName, sb_script_core.ToString(), references = "");
           obj_parameters_array = new object[] { };
           dynamic obj_class = CreateClassInstance(assembly_trigger_logic, class_name, obj_parameters_array);
           object obj_return = obj_class.Run(windowHandle);
@@ -1022,8 +1085,8 @@ namespace Includes
         public static dynamic CreateClassInstance(Assembly assembly_library_code, string class_name, object[] obj_parameters_array, System.Reflection.BindingFlags flags = (BindingFlags.Public | BindingFlags.Instance))
           {
           //<diagnostics to see if member names are proper>((((System.Reflection.RuntimeAssembly)assembly_library_code).DefinedTypes).Where(c=>c.FullName.Contains("Includes." + class_name)))
-          string fullname = "Includes." + class_name;
-          bool bln_ignore_case = false;
+          var fullname = "Includes." + class_name;
+          var bln_ignore_case = false;
           //var flags = (BindingFlags.Public | BindingFlags.Instance);
           var returnValue = assembly_library_code.CreateInstance(fullname, bln_ignore_case, flags, null, obj_parameters_array, null, new object[] { });
           return (returnValue);
@@ -1041,7 +1104,7 @@ namespace Includes
           {
           var obj_library_code_instance = assembly_library_code.CreateInstance("Includes." + function_name);
           //<diagnostics>Type[] obj_library_types = ((Assembly)assembly_library_code).GetTypes();
-          Type type_instance_type = obj_library_code_instance.GetType();
+          var type_instance_type = obj_library_code_instance.GetType();
           var method_info = type_instance_type.GetMethod(function_name);
 
           object obj_return = method_info.Invoke(obj_library_code_instance, obj_parameters_array);
@@ -1061,14 +1124,14 @@ namespace Includes
         public static object GetInclude(IntPtr windowHandle, string include, string references = "")
           {
           references = (references.Length != 0 ? references : Includes.VoiceBotSupportClasses.Constants.default_references);
-          string code = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(BFS.ScriptSettings.ReadValue(include)));
+          var code = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(BFS.ScriptSettings.ReadValue(include)));
           var obj_include = ScriptEngine.CsCodeAssembler(windowHandle, include, code, references);
           return ((object)obj_include);
           }
 
         /// <summary>
         /// Author: Darkstrumn
-        /// Function: Intially intended to emulate the way VoiceBot stores it macroscripts this also has the effect of
+        /// Function: encode - Intially intended to emulate the way VoiceBot stores it macroscripts this also has the effect of
         /// shrinking and preserving it textual content as well as making it easy to transport via the web
         /// large amounts of data. Thus it can be uses as poor-man's compression, so I refactored it out here
         /// </summary>
@@ -1076,21 +1139,21 @@ namespace Includes
         /// <returns></returns>
         public static string Base64Encode(string content)
           {
-          string returnValue = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(content));
+          var returnValue = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(content));
           return (returnValue);
           }
 
         /// <summary>
         /// Author: Darkstrumn
-        /// Function: Intially intended to emulate the way VoiceBot stores it macroscripts this also has the effect of
-        /// shrinking and preserving it textual content as well as making it easy to transport via the web
+        /// Function: decodaaIntially intended to emulate the way VoiceBot stores it macroscripts this also has the effect of
+        /// shrinking and preserving its textual content as well as making it easy to transport via the web
         /// large amounts of data. Thus it can be uses as poor-man's compression, so I refactored it out here
         /// </summary>
         /// <param name="content"></param>
         /// <returns></returns>
         public static string Base64Decode(string content)
           {
-          string returnValue = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(BFS.ScriptSettings.ReadValue(content)));
+          var returnValue = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(BFS.ScriptSettings.ReadValue(content)));
           return (returnValue);
           }
 
@@ -1107,7 +1170,7 @@ namespace Includes
           {
           object obj_include = null;
           references = (references.Length != 0 ? references : Includes.VoiceBotSupportClasses.Constants.default_references);
-          string include_path = (Path.Combine(Includes.VoiceBotSupportClasses.Constants.default_Include_path, path + ".cs")).Replace("\\\\", "\\").Replace("file:\\", "");//<<--conditioning:: undo the script compatibility conditioning of the constant = app.path\ScriptExtension\IncludeFile.cs
+          var include_path = (Path.Combine(Includes.VoiceBotSupportClasses.Constants.default_Include_path, path + ".cs")).Replace("\\\\", "\\").Replace("file:\\", "");//<<--conditioning:: undo the script compatibility conditioning of the constant = app.path\ScriptExtension\IncludeFile.cs
 
           try
             {
