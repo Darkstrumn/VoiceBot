@@ -975,7 +975,12 @@ using System;
 using System.Drawing;
 namespace Includes
 {
-    public class TriggerLogic
+    public interface ITriggerLogic
+    {
+    bool Run(IntPtr windowHandle);
+    }
+    //-------------------------------------------------------------------------
+    public class TriggerLogic : ITriggerLogic
     {
       private bool _bln_result = true;
       private string _error = ""ok"";
@@ -1153,7 +1158,7 @@ namespace Includes
         /// <returns></returns>
         public static string Base64Decode(string content)
           {
-          var returnValue = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(BFS.ScriptSettings.ReadValue(content)));
+          var returnValue = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(content));
           return (returnValue);
           }
 
