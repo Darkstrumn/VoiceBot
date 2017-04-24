@@ -963,7 +963,7 @@ namespace VoiceBotScriptTemplate
         public static object Eval(IntPtr windowHandle, string codeBlockName, string source_cs, string references = "")
           {
           StringBuilder sb_script_core = new StringBuilder("");
-          object[] obj_parameters_array;
+          var obj_parameters_array = new object[] { };
           var class_name = "TriggerLogic";
           var function_name = "{CLASS}.Run".Replace("{CLASS}", class_name);
           var code = "";
@@ -1014,7 +1014,6 @@ namespace Includes
           code = code.Replace("{REFERENCES}", Includes.VoiceBotSupportClasses.Constants.default_references);
           sb_script_core.Append(code);
           var assembly_trigger_logic = (Assembly)ScriptEngine.CsCodeAssembler(windowHandle, codeBlockName, sb_script_core.ToString(), references = "");
-          obj_parameters_array = new object[] { };
           dynamic obj_class = CreateClassInstance(assembly_trigger_logic, class_name, obj_parameters_array);
           object obj_return = obj_class.Run(windowHandle);
 

@@ -13,7 +13,6 @@ namespace VoiceBotScriptTemplate.Includes.VoiceBotSupportClasses.Tests
   [TestFixture()]
   public class ScriptEngineTests
     {
-
     [Test()]
     public void EvalTest()
       {
@@ -22,7 +21,7 @@ namespace VoiceBotScriptTemplate.Includes.VoiceBotSupportClasses.Tests
       var codeBlock = "_bln_result = (\"UnitTest\" + \"Passes\" == \"UnitTestPasses\");";
       var codeBlockReferences = "";
 
-      var result = Includes.VoiceBotSupportClasses.ScriptEngine.Eval(windowHandle, codeBlockName, codeBlock, codeBlockReferences);
+      var result = ScriptEngine.Eval(windowHandle, codeBlockName, codeBlock, codeBlockReferences);
       Assert.AreEqual(result, true);
       }
 
@@ -35,13 +34,12 @@ namespace VoiceBotScriptTemplate.Includes.VoiceBotSupportClasses.Tests
       var codeBlockReferences = "";
 
       StringBuilder sb_script_core = new StringBuilder("");
-      object[] obj_parameters_array;
-      var class_name = "TriggerLogic";
+      var class_name = codeBlockName; //<<--alias for clarity
       var function_name = "{CLASS}.Run".Replace("{CLASS}", class_name);
       var code = "";
       var code_template = @"
 //=============================================================================
-//=={CODEBLOCKNAME}
+//=={CODEBLOCKNAME} - Unit Test
 //=============================================================================
 using System;
 using System.Drawing;
@@ -85,14 +83,78 @@ namespace Includes
       code = code.Replace("{CODEBLOCKNAME}", codeBlockName);
       code = code.Replace("{REFERENCES}", Includes.VoiceBotSupportClasses.Constants.default_references);
       sb_script_core.Append(code);
-      var assembly_trigger_logic = (Assembly)ScriptEngine.CsCodeAssembler(windowHandle, codeBlockName, sb_script_core.ToString(), codeBlockReferences);
-      Assert.IsNotNull(assembly_trigger_logic);
+      var assembly_library_code = (Assembly)ScriptEngine.CsCodeAssembler(windowHandle, codeBlockName, sb_script_core.ToString(), codeBlockReferences);
+      Assert.IsNotNull(assembly_library_code);
       }
 
     [Test()]
     public void CreateClassInstanceTest()
       {
-      Assert.Fail();
+      IntPtr windowHandle = new IntPtr();
+      var codeBlockName = "TriggerLogic";
+      var codeBlock = "_bln_result = (\"UnitTest\" + \"Passes\" == \"UnitTestPasses\");";
+      var codeBlockReferences = "";
+
+      StringBuilder sb_script_core = new StringBuilder("");
+      var obj_parameters_array = new object[] { };
+      var class_name = codeBlockName; //<<--alias for clarity
+      var function_name = "{CLASS}.Run".Replace("{CLASS}", class_name);
+      var code = "";
+
+      var fullname = "Includes." + class_name;
+      var bln_ignore_case = false;
+
+      var code_template = @"
+//=============================================================================
+//=={CODEBLOCKNAME} - Unit Test
+//=============================================================================
+using System;
+using System.Drawing;
+namespace Includes
+{
+    public interface ITriggerLogic
+    {
+    bool Run(IntPtr windowHandle);
+    }
+    //-------------------------------------------------------------------------
+    public class TriggerLogic : ITriggerLogic
+    {
+      private bool _bln_result = true;
+      private string _error = ""ok"";
+      private string _diagnostics = """";
+      public TriggerLogic()
+          {;}
+      public bool Result{get{return(_bln_result);}}
+      public string LastError{get{return(_error);}}
+      public string DiagnosticsMessage{get{return(_diagnostics);}}
+	    public bool Run(IntPtr windowHandle)
+	    {
+        try
+            {
+		    {CODEBLOCK}
+            }
+        catch(Exception error)
+            {
+            _error = ""TriggerLogic: fail - {ERROR}."".Replace(""{ERROR}"", error.Message);
+            }
+
+        return(Result);
+	    }
+    }
+}";
+      /*
+      execute VHP's (variable hardpoints), allows us to add token handling to the code builder, can be a one-liner,
+      but is clearer broken down. Note: order is important.
+      */
+      code = code_template.Replace("{CODEBLOCK}", codeBlock);
+      code = code.Replace("{CODEBLOCKNAME}", codeBlockName);
+      code = code.Replace("{REFERENCES}", Includes.VoiceBotSupportClasses.Constants.default_references);
+      sb_script_core.Append(code);
+      System.Reflection.BindingFlags flags = (BindingFlags.Public | BindingFlags.Instance);
+      var assembly_library_code = (Assembly)ScriptEngine.CsCodeAssembler(windowHandle, codeBlockName, sb_script_core.ToString(), codeBlockReferences);
+      dynamic obj_class = (dynamic)ScriptEngine.CreateClassInstance(assembly_library_code, class_name, obj_parameters_array);
+      var classInstance = assembly_library_code.CreateInstance(fullname, bln_ignore_case, flags, null, obj_parameters_array, null, new object[] { });
+      Assert.IsNotNull(classInstance);
       }
 
     [Test()]
