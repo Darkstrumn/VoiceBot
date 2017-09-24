@@ -26,6 +26,30 @@ namespace VoiceBotScriptTemplate.Includes.VoiceBotSupportClasses.Tests
       }
 
     [Test()]
+    public void BfsTest()
+      {
+      IntPtr windowHandle = new IntPtr();
+      var codeBlockName = "TriggerLogic";
+      var codeBlock = "_bln_result = (\"UnitTest\" + \"Passes\" == \"UnitTestPasses\");\nVoiceBotScriptTemplate.BFS.Speech.TextToSpeech(\"Commander - Unit Test Passes.\");";
+      var codeBlockReferences = "";
+
+      var result = ScriptEngine.Eval(windowHandle, codeBlockName, codeBlock, codeBlockReferences);
+      Assert.AreEqual(result, true);
+      }
+
+    [Test()]
+    public void BfsAliasTest()
+      {
+      IntPtr windowHandle = new IntPtr();
+      var codeBlockName = "TriggerLogic";
+      var codeBlock = "BFS.Speech.TextToSpeech(\"Commander - Voice Bot Script Template alias - Unit Test Passes.\");\n_bln_result = (\"UnitTest\" + \"Passes\" == \"UnitTestPasses\");";
+      var codeBlockReferences = "";
+
+      var result = ScriptEngine.Eval(windowHandle, codeBlockName, codeBlock, codeBlockReferences);
+      Assert.AreEqual(result, true);
+      }
+
+    [Test()]
     public void CsCodeAssemblerTest()
       {
       IntPtr windowHandle = new IntPtr();
@@ -225,21 +249,22 @@ namespace Includes
       var assembly_library_code = ScriptEngine.CsCodeAssembler(windowHandle, codeBlockName, sb_script_core.ToString(), codeBlockReferences);
       var classInstance = assembly_library_code.CreateInstance(fullname);
       var type_instance_type = classInstance.GetType();
-      var method_info = type_instance_type.GetRuntimeMethods().Where(m => m.Name == function_name).FirstOrDefault();
+      var method_info = type_instance_type.GetMethods().Where(m => m.Name == function_name).FirstOrDefault();
 
       object obj_return = method_info.Invoke(classInstance, obj_parameters_array);
       Assert.IsTrue((bool)obj_return);//<<--expected object for this test is a bool true for the logic:'_bln_result = ("UnitTest" + "Passes" == "UnitTestPasses");'
       }
 
-    [Test()]
-    public void GetIncludeTest()
-      {
-      IntPtr windowHandle = new IntPtr();
-      var include = "Include_DarkLibs";
-      var references = Constants.default_references;
-      var result = ((Assembly)ScriptEngine.LoadInclude(windowHandle, include, references)).GetTypes().Where(x => x.FullName.Contains("Includes.Speech")).ToArray<Type>()[0];
-      Assert.AreEqual(result.FullName, "Includes.Speech");
-      }
+    //[Test()]
+    //public void GetIncludeTest()
+    //  {
+    //  IntPtr windowHandle = new IntPtr();
+    //  var include = "Include_DarkLibs";
+    //  var references = Constants.default_references;
+    //  var includeScript = BFS.ScriptSettings.ReadValue(include);
+    //  var result = ((Assembly)ScriptEngine.GetInclude(windowHandle, include, references)).GetTypes().Where(x => x.FullName.Contains("Includes.Speech")).ToArray<Type>()[0];
+    //  Assert.AreEqual(result.FullName, "Includes.Speech");
+    //  }
 
     [Test()]
     public void Base64DecodeTest()
@@ -264,7 +289,11 @@ namespace Includes
     [Test()]
     public void LoadIncludeTest()
       {
-      Assert.Fail();
+      IntPtr windowHandle = new IntPtr();
+      var include = "Include_DarkLibs";
+      var references = Constants.default_references;
+      var result = ((Assembly)ScriptEngine.LoadInclude(windowHandle, include, references)).GetTypes().Where(x => x.FullName.Contains("Includes.Speech")).ToArray<Type>()[0];
+      Assert.AreEqual(result.FullName, "Includes.Speech");
       }
     }
   }

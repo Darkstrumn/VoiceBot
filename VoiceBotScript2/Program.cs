@@ -70,7 +70,7 @@ namespace VoiceBotScriptTemplate
   /// developmental\\scaffolding stub for binary fortress services class while in 
   /// development (outside of voicebot editor> ie Visual Studio 
   /// (for intellisense and such purposes)
-  /// (These should require any modification, however you are free to do so as
+  /// (These shouldn't require any modification, however you are free to do so as
   /// desired.
   /// </summary>
   namespace BFS
@@ -282,6 +282,36 @@ namespace VoiceBotScriptTemplate
   ///           This systems allows the core logic to be in one script callable by
   ///           other scripts, easy to maintain, and add to.
   /// <summary>
+  /*  <example use>
+  In VoiceBot, setup macro such as "Jettison all cargo". The macro will trigger this script (part 1) to, for example handle confirmation or revocation of the order.
+  The script can be set to accept a varied number of valid confirmation responses to continue the triggered action. As well as a varied number of valid responses to cancel the triggered action.
+  IE. 
+  Valid confirmation responses:
+    o Yes
+    o Go a head
+    o Please
+    o Do it
+    o Affirmative
+    o Confirm
+    o Confirmed
+    o Correct
+    o Continue
+    o Accepted
+    o Accept
+  Valid abort responses:
+    o Abort
+    o No
+    o Stop
+    o Quit
+    o Don't do it
+    o Opps
+    o Made a mistake
+    o Belay that
+
+  This allows the macro to support valid multi-responces from the user, and act in multiple ways, all from within the one macro.
+  The basic result is a true | false boolean. The effect is that if true, continue the action, if false, cancel (do nothing)
+  */
+  //  </example use>
   //=============================================================================
   public static class VoiceBotScript
     {
@@ -314,11 +344,11 @@ namespace VoiceBotScriptTemplate
     ///           side of the system, doing random response, and such, then sends
     ///           the requested actions to the AOSCore script via IPC using variables
     ///           that are then executed from this script.
-    ///           This systems allows the core logic to be in one script callable by
+    ///           This system allows the core logic to be in one script callable by
     ///           other scripts, easy to maintain, and add to.
     ///           While Random response can be handled by VoiceBot now, it can
-    ///           also be specifically coded if the macro workflow demands it, or
-    ///           that is your thing.
+    ///           also be specifically coded if the macro workflow demands it,
+    ///           or if that is your preference.
     /// <summary>
     /// <param name="windowHandle"></param>
     public static void Run(IntPtr windowHandle)
@@ -332,8 +362,16 @@ namespace VoiceBotScriptTemplate
       var fixture = @"TestMacro
             |VerbalConfirmationPrompt`bln_confirm`Commander - Please confirm the jettisoning of all cargo.`Yes~Go a head~Please~Do it~Affirmative~Confirm~Confirmed~Correct~Continue~Accepted~Accept`Abort~No~Stop~Quit~Don't do it~Opps~Made a mistake~Belay that`Commander - I require verbal confirmation to proceed.~~If I may, a Yes or No would be sufficient confirmation sir.~~As I'm unable to understand your response - I will accept this as a failure to respond and abort. There may be a technical fault with the voice input system if you were indeed responding.
             |Eval`TriggerLogic`_diagnostics = BFS.ScriptSettings.ReadValue(""bln_confirm"");if(BFS.ScriptSettings.ReadValue(""bln_confirm"") == ""true""){BFS.Input.SendKeys(""{LALT}"");BFS.Speech.TextToSpeech(""Commander - All Cargo has been jettisoned, as ordered."");}else{_bln_result = false;BFS.Speech.TextToSpeech(""Commander - The jettisoning of cargo has been belayed, as ordered."");}`NULL".Replace("\r\n", "");
+      /* 
+       * Step 1:
+       * The fixture is the result of the first part of the macro. It can betriggered by VoiceBot accepting the user input, for example: "Computer, Jettison all cargo." Or it can be simulated via the fixture (as a unified script).
+       * It would store the arguments and such in the VoiceBot registry space, and call the AOSCore script to process the second part, or as a unified script continue and process the data
+       * */
       Includes.FxLib.SaveArgs("AOSCore_ipc", (fixture.Split('|')));
-
+      /*
+       * Step 2:
+       * The AOSCore script will take the data and process...
+       */
       var ipc_var_name = script_name + "_ipc";
       //>>>>>IPC\\Argument data can be passed forward from macro to macro using vars.
       var args = new Dictionary<int, KeyValuePair<string, string>>();
@@ -380,6 +418,7 @@ namespace VoiceBotScriptTemplate
       }
 
     /*
+     * Step 3:
      * The command parser is the core of the AOS function routing.
      * It uses a Function Dictionary to negate the need to use switch or if blocks
      * to navigate the available functions at the Developers command.
@@ -390,20 +429,26 @@ namespace VoiceBotScriptTemplate
       var arrMethodArguments = arguments.Split('`');
       var numberOfSubParams = (arrMethodArguments.Length);
       //>>>>>diagnostics
-      BFS.Speech.TextToSpeech("The number of sub-parameters found was " + numberOfSubParams.ToString());
+      //BFS.Speech.TextToSpeech("The number of sub-parameters found was " + numberOfSubParams.ToString());
       //>>>>>handle requested methods using function dictionary to refactor-out long switch statement, signatures made uniform for covenience
       var actions = new Dictionary<string, Delegate>();
+
       //>>>>>complex functions - heavy logic functions that can possibly be improved, but are the core of the AOS
+      //>>>>>Evaluate logic with a basic boolean result (typically) expressed as a string for universal application
       actions.Add("eval", new Func<IntPtr, string[], int, string>(Eval));
+      //>>>>>Allows the macro to verbally prompt the user for further input, in this case the result is technically boolean, true|false, yes|no in nature ie: "Are you sure?"
       actions.Add("verbalconfirmationprompt", new Func<IntPtr, string[], int, string>(VerbalConfirmationPrompt));
-      actions.Add("verbalinputprompt", new Func<IntPtr, string[], int, string>(VerbalInputPrompt));
-      actions.Add("verbalspellprompt", new Func<IntPtr, string[], int, string>(VerbalSpellPrompt));
+
       //>>>>>simple functions - lighter functions often in support of the complex functions
+      //>>>>>Basic TTS functionality
       actions.Add("texttospeech", new Func<IntPtr, string[], int, string>(TextToSpeech));
+      //>>>>>Basic ship representation in memory so the emulated ship computer (Elite Dangerous was the initial program this was created for) can behave as if it is "aware" of the ships actual state ( without ED having APIs to fetch such state and other metadata from ).
       actions.Add("initshipstate", new Func<IntPtr, string[], int, string>(InitShipState));
       actions.Add("getshipstate", new Func<IntPtr, string[], int, string>(GetShipState));
       actions.Add("setshipstate", new Func<IntPtr, string[], int, string>(SetShipState));
+      //>>>>>IPC (registry variable handling)
       actions.Add("setvalue", new Func<IntPtr, string[], int, string>(SetValue));
+      //>>>>>VoiceBot environment handling, emulate user interaction with computer environment
       actions.Add("sendkeys", new Func<IntPtr, string[], int, string>(SendKeys));
 
       if( actions.Keys.Contains(method.ToLower()) )
@@ -427,10 +472,42 @@ namespace VoiceBotScriptTemplate
       BFS.Speech.TextToSpeech("Number of arguments expected is {NUM}".Replace("NUM}", numberOfExpectedSubParams.ToString()));
       }
 
+    /// <summary>
+    /// Evaluate the code provided and return the result. The result will typically be a string but likely the string representation of the resulting value true|false, a numeric value, or an actual literal string.
+    /// Note: it may also be the result of an error, and the diagnostic info therein.
+    /// </summary>
+    /// <param name="windowHandle"></param>
+    /// <param name="arrMethodArguments"></param>
+    /// <param name="numberOfSubParams"></param>
+    /// <returns></returns>
     public static string Eval(IntPtr windowHandle, string[] arrMethodArguments, int numberOfSubParams)
       {
       /*
-          |eval
+    Example use and parameter organization:
+    Calling macro is called JettisonAllCargo, a non-toggle macro requiring confirmation of the action to proceed.
+    An IPC message is setup to have the AOSCore process the VCP request and responding action
+    ---------------
+    --combo ex   --
+    ---------------
+    "JettisonAllCargo
+        |VCP
+            `bln_confirm <<NOTE:the storage variable for the VCP response will be a boolean:NOTE>>
+            `Commander - Please confirm the jettisoning of all cargo.
+            `Yes~Go a head~Please~Do it~Affirmative~Confirm~Confirmed~Correct~Continue~Accepted~Accept
+            `Abort~No~Stop~Quit~Don't do it~Opps~Made a mistake~Belay that
+            <<NOTE: the Retries is a ~ delimited list of retry-prompt-responses, if the recognizer does not recognize "valid" responses.
+            It will say them in order for each retry, to skip a retry response, ie say something for retry 1, skip 2, retry 3...
+            use an empty response:Retries~retry 1~~retry 3... .:NOTE>>
+            <<NOTE: if Retries is empty, the first answer will be accepted true or false, to allow for mistakes, at least 1 retry should be defined.:NOTE>>
+            `Retries~Commander - I require verbal confirmation to proceed.~~If I may, a Yes or No would be sufficient confirmation sir.~~As I'm unable to understand your response - I will accept this as a failure to respond and abort. There may be a technical fault with the voice input system if you were indeed responding.
+            }
+        |Eval
+            `if(BFS.ScriptSettings.ReadValue("bln_confirm") == "true"){BFS.Input.SendKeys("{DELETE}");BFS.Speech.TextToSpeech("Commander - All Cargo has been jettisoned, as ordered.");}else{BFS.Speech.TextToSpeech("Commander - The jettisoning of cargo has been belayed, as ordered.");}
+    "
+    ---------------
+    --separate ex--
+    ---------------
+      |eval
               `JettisonAllCargoTriggerLogic
               `if(BFS.ScriptSettings.ReadValue("bln_confirm") == "true"){BFS.Input.SendKeys("{DELETE}");BFS.Speech.TextToSpeech("Commander - All Cargo has been jettisoned, as ordered.");}else{BFS.Speech.TextToSpeech("Commander - The jettisonning of cargo has been belayed, as ordered.");
               `<<NOTE:Here is where references go, if not using any, set to string.Empty:NOTE>>
@@ -455,46 +532,45 @@ namespace VoiceBotScriptTemplate
       return returnValue;
       }
 
-    /*
-    -Verbal Confirmation Prompt(VCP): used typically for simple confirmation prompting
-    arrMethodArguments[0] //<<--storage variable for the VCP response, will be a boolean
-    arrMethodArguments[1] //<<--Aural Confirmation Prompt verbiage
-    arrMethodArguments[2] //<<--ValidTrue ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-    arrMethodArguments[3] //<<--ValidFalse ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-    arrMethodArguments[4] //<<--Retries ~ delimited string defining all retry responses to the user prompting them to try again using a response from the valid list of responses. use and empty response to skip retry response attempts, ie give a retry response every 2 retries... .
-    Example use and parameter organization:
-    Calling macro is called JettisonAllCargo, a non-toggle macro requiring confirmation of the action to proceed.
-    An IPC message is setup to have the AOSCore process the VCP request and responding action
-    "JettisonAllCargo
-        |VCP
-            `bln_confirm <<NOTE:the storage variable for the VCP response will be a boolean:NOTE>>
-            `Commander - Please confirm the jettisoning of all cargo.
-            `Yes~Go a head~Please~Do it~Affirmative~Confirm~Confirmed~Correct~Continue~Accepted~Accept
-            `Abort~No~Stop~Quit~Don't do it~Opps~Made a mistake~Belay that
-            <<NOTE: the Retries is a ~ delimited list of retry responses if the recognizer does not get "valid" responses.
-            It will say them in order for each retry, to skip a retry response, ie say something for retry 1, skip 2, retry 3...
-            use an empty response:Retries~retry 1~~retry 3... .:NOTE>>
-            <<NOTE: if Retries is empty, the first answer will be accepted true or false, to allow for mistakes, at least 1 retry should be defined.:NOTE>>
-            `Retries~Commander - I require verbal confirmation to proceed.~~If I may, a Yes or No would be sufficient confirmation sir.~~As I'm unable to understand your response - I will accept this as a failure to respond and abort. There may be a technical fault with the voice input system if you were indeed responding.
-            }
-        |Eval
-            `if(BFS.ScriptSettings.ReadValue("bln_confirm") == "true"){BFS.Input.SendKeys("{DELETE}");BFS.Speech.TextToSpeech("Commander - All Cargo has been jettisoned, as ordered.");}else{BFS.Speech.TextToSpeech("Commander - The jettisoning of cargo has been belayed, as ordered.");}
-    "
-    */
-
     /// <summary>
     /// -Verbal Confirmation Prompt(VCP): used typically for aquiring simple verbal confirmation
     /// </summary>
     /// <param name="arrMethodArguments"></param>
     ///>>>>>arrMethodArguments[0] //<<--storage variable for the VCP response, will be a boolean
     ///>>>>>arrMethodArguments[1] //<<--Aural Confirmation Prompt verbiage
-    ///>>>>>arrMethodArguments[2] //<<--ValidTrue ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-    ///>>>>>arrMethodArguments[3] //<<--ValidFalse ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
+    ///>>>>>arrMethodArguments[2] //<<--ValidTrue ~ delimited string defining all valid true responses (Note speech to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
+    ///>>>>>arrMethodArguments[3] //<<--ValidFalse ~ delimited string defining all valid true responses (Note speech to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
     ///>>>>>arrMethodArguments[4] //<<--Retries ~ delimited string defining all retry responses to the user prompting them to try again using a response from the valid list of responses. use and empty response to skip retry response attempts, ie give a retry response every 2 retries... .
     /// <param name="numberOfSubParams"></param>
     /// <param name="numberOfExpectedSubParams"></param>
     public static string VerbalConfirmationPrompt(IntPtr windowHandle, string[] arrMethodArguments, int numberOfSubParams)
       {
+      /*
+      -Verbal Confirmation Prompt(VCP): used typically for simple confirmation prompting
+      arrMethodArguments[0] //<<--storage variable for the VCP response, will be a boolean
+      arrMethodArguments[1] //<<--Aural Confirmation Prompt verbiage
+      arrMethodArguments[2] //<<--ValidTrue ~ delimited string defining all valid true responses (Note speech to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
+      arrMethodArguments[3] //<<--ValidFalse ~ delimited string defining all valid false responses (Note speech to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
+      arrMethodArguments[4] //<<--Retries ~ delimited string defining all retry request prompts to the user prompting them to try again using a response from the valid list of responses. Use an empty response to skip retry response attempts, ie give a retry response every 2 invalid response retries... .
+      Example use and parameter organization:
+      Calling macro is called JettisonAllCargo, a non-toggle macro requiring confirmation of the action to proceed.
+      An IPC message is setup to have the AOSCore process the VCP request and responding action
+      "JettisonAllCargo
+          |VCP
+              `bln_confirm <<NOTE:the storage variable for the VCP response will be a boolean:NOTE>>
+              `Commander - Please confirm the jettisoning of all cargo.
+              `Yes~Go a head~Please~Do it~Affirmative~Confirm~Confirmed~Correct~Continue~Accepted~Accept
+              `Abort~No~Stop~Quit~Don't do it~Opps~Made a mistake~Belay that
+              <<NOTE: the Retries is a ~ delimited list of retry-prompt-responses, if the recognizer does not recognize "valid" responses.
+              It will say them in order for each retry, to skip a retry response, ie say something for retry 1, skip 2, retry 3...
+              use an empty response:Retries~retry 1~~retry 3... .:NOTE>>
+              <<NOTE: if Retries is empty, the first answer will be accepted true or false, to allow for mistakes, at least 1 retry should be defined.:NOTE>>
+              `Retries~Commander - I require verbal confirmation to proceed.~~If I may, a Yes or No would be sufficient confirmation sir.~~As I'm unable to understand your response - I will accept this as a failure to respond and abort. There may be a technical fault with the voice input system if you were indeed responding.
+              }
+          |Eval
+              `if(BFS.ScriptSettings.ReadValue("bln_confirm") == "true"){BFS.Input.SendKeys("{DELETE}");BFS.Speech.TextToSpeech("Commander - All Cargo has been jettisoned, as ordered.");}else{BFS.Speech.TextToSpeech("Commander - The jettisoning of cargo has been belayed, as ordered.");}
+      "
+      */
       var returnValue = "ok";
       var numberOfExpectedSubParams = 5;
 
@@ -564,197 +640,6 @@ namespace VoiceBotScriptTemplate
       else //>>>>>warn
         {
         VoiceArgcError(windowHandle, "", numberOfSubParams, numberOfExpectedSubParams);
-        returnValue = "error:{ERROR}".Replace("{ERROR}", "Invalid number of arguments.");
-        }
-      return returnValue;
-      }
-
-    /*
-    arrMethodArguments[0] //<<--storage variable for the VCP response, will be a boolean
-    arrMethodArguments[1] //<<--Aural Input Prompt verbiage
-    arrMethodArguments[2] //<<--ValidAccept ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-    arrMethodArguments[3] //<<--ValidCancel ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-    Example use and parameter organization:
-    Calling macro is called NameShip, a non-toggle macro requiring verbal input of the ships name.
-    An IPC message is setup to have the AOSCore process the VIP request and responding action
-    "NameShip
-        |VIP
-            `ship_designation <<NOTE:the storage variable for the VCP response will be a boolean:NOTE>>
-            `Commander - Please state ships new designation. Please finish with Accept to accept your verbal input and process.
-            }
-        |Eval
-            `BFS.Speech.TextToSpeech("Commander - Ship name set to All Cargo has been jettisoned, as ordered.");}else{BFS.Speech.TextToSpeech("Commander - The jettisoning of cargo has been belayed, as ordered.");}
-    "
-    */
-
-    /// <summary>
-    /// Verbal Input Prompt(VIP): used typically for aquiring verbal dictation type responses
-    /// </summary>
-    /// <param name="arrMethodArguments"></param>
-    ///>>>>>arrMethodArguments[0] //<<--storage variable for the VIP response, will be a boolean
-    ///>>>>>arrMethodArguments[1] //<<--Aural Input Prompt verbiage
-    ///>>>>>arrMethodArguments[2] //<<--ValidAccept ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-    ///>>>>>arrMethodArguments[3] //<<--ValidCancel ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-    /// <param name="numberOfSubParams"></param>
-    /// <param name="numberOfExpectedSubParams"></param>
-    public static string VerbalInputPrompt(IntPtr windowHandle, string[] arrMethodArguments, int numberOfSubParams)
-      {
-      var returnValue = "ok";
-      var numberOfExpectedSubParams = 4;
-
-      if( numberOfSubParams == numberOfExpectedSubParams )//>>>>>execute
-        {
-        var arr_valid_accept = "Accept~Submit~Confirm~Done".Split('~');
-        var arr_valid_cancel = "Abort~Cancel".Split('~');
-        var result = string.Empty;
-        var validResponse = true;
-        var quit = false;
-        var bln_accepted = false;
-
-        BFS.Speech.TextToSpeech(arrMethodArguments[0]);//<<--initial aural prompt
-
-        while( !quit )
-          {
-          var user_response = (string)Includes.Speech.SpeechRecognizer("Ready");
-          BFS.Speech.TextToSpeech("Commander, confirming that I heard: " + user_response);
-          //>>>>>parse spoken data against list of valid accept tokens to see if content is complete (accepted)
-          foreach( var valid_accept in arr_valid_accept )
-            {
-            if( user_response.Trim().ToLower() == valid_accept.Trim().ToLower() )
-              {
-              bln_accepted = true;
-              break;
-              }
-            //>>>>>parse spoken data against list of valid cancel tokens to see if content is complete (cancelled)
-            foreach( var valid_cancel in arr_valid_cancel )
-              {
-              if( user_response.Trim().ToLower() != valid_cancel.Trim().ToLower() )
-                { continue; }
-              validResponse = false;
-              break;
-              }
-            //>>>>>if response is not valid, the input was accepted as a cancel token
-            if( !validResponse )
-              { quit = true; }
-            else//>>>>>response is valid, response was either a command token to accept, or more input, look deeper...
-              {
-              if( !bln_accepted )//>>>>>if accepted is true, the input was the accept token, breech the loop
-                { quit = true; }
-              else//>>>>>append user input to the resulting speech to text buffer
-                { result += (result.Length > 0 ? " " : "") + user_response; }
-              }
-            }
-          //>>>>>if accepted, store value in VoiceBot variable supplied is arg0
-          if( bln_accepted )
-            {
-            BFS.Speech.TextToSpeech("Commander, response accepted.");
-            BFS.ScriptSettings.WriteValue(arrMethodArguments[0], result);
-            returnValue += ":" + result;
-            }
-          else
-            { returnValue = "cancelled"; }
-          }
-        }
-      else //>>>>>warn
-        {
-        VoiceArgcError(windowHandle, "Verbal Input Prompt(VIP)", numberOfSubParams, numberOfExpectedSubParams);
-        returnValue = "error:{ERROR}".Replace("{ERROR}", "Invalid number of arguments.");
-        }
-      return returnValue;
-      }
-
-    /*
-    arrMethodArguments[0] //<<--storage variable for the VCP response, will be a boolean
-    arrMethodArguments[1] //<<--Aural Input Prompt verbiage
-    arrMethodArguments[2] //<<--ValidAccept ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-    arrMethodArguments[3] //<<--ValidCancel ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-    Example use and parameter organization:
-    Calling macro is called NameShip, a non-toggle macro requiring verbal input of the ships name.
-    An IPC message is setup to have the AOSCore process the VIP request and responding action
-    "NameShip
-        |VSP
-            `system_name <<NOTE:the storage variable for the VCP response will be a boolean:NOTE>>
-            `Commander - Please spell out the name of the system. Please finish with Accept to accept your verbal input and process.
-            }
-        |Eval
-            `BFS.Speech.TextToSpeech("Commander - Ship name set to All Cargo has been jettisoned, as ordered.");}else{BFS.Speech.TextToSpeech("Commander - The jettisoning of cargo has been belayed, as ordered.");}
-    "
-    */
-
-    /// <summary>
-    /// Verbal Spell Prompt(VSP): used typically for prompts that may type the response into an input field, and requires greater accuracy on the spelling of the input (typically a single word)
-    /// </summary>
-    /// <param name="arrMethodArguments"></param>
-    ///>>>>>arrMethodArguments[0] //<<--storage variable for the VSP response, will be a boolean
-    ///>>>>>arrMethodArguments[1] //<<--Aural Input Prompt verbiage
-    ///>>>>>arrMethodArguments[2] //<<--ValidAccept ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-    ///>>>>>arrMethodArguments[3] //<<--ValidCancel ~ delimited string defining all valid true responses (Note speach to text translation is being done, so spelling may be important, and may need to be phonetic, debug by sampling what the recognizer hears and use that.)
-    /// <param name="numberOfSubParams"></param>
-    /// <param name="numberOfExpectedSubParams"></param>
-    public static string VerbalSpellPrompt(IntPtr windowHandle, string[] arrMethodArguments, int numberOfSubParams)
-      {
-      var returnValue = "ok";
-      var numberOfExpectedSubParams = 4;
-      //>>>>>validate
-      if( numberOfSubParams == numberOfExpectedSubParams )//>>>>>execute
-        {
-        var arr_valid_accept = "Accept~Submit~Confirm~Done".Split('~');
-        var arr_valid_cancel = "Abort~Cancel".Split('~');
-        var user_response = "";
-        var result = "";
-        var validResponse = true;
-        var quit = false;
-        var bln_accepted = false;
-
-        BFS.Speech.TextToSpeech(arrMethodArguments[0]);//<<--initial aural prompt
-
-        while( !quit )
-          {
-          user_response = (string)Includes.Speech.SpeechRecognizer("Ready");
-          BFS.Speech.TextToSpeech("Commander, confirming that I heard: " + user_response);
-          //>>>>>parse spoken data against list of valid accept tokens to see if content is complete (accepted)
-          foreach( var valid_accept in arr_valid_accept )
-            {
-            if( user_response.Trim().ToLower() == valid_accept.Trim().ToLower() )
-              {
-              bln_accepted = true;
-              break;
-              }
-            //>>>>>parse spoken data against list of valid cancel tokens to see if content is complete (cancelled)
-            foreach( var valid_cancel in arr_valid_cancel )
-              {
-              if( user_response.Trim().ToLower() != valid_cancel.Trim().ToLower() )
-                { continue; }
-              validResponse = false;
-              break;
-              }
-            //>>>>>if response is not valid, the input was accepted as a cancel token
-            if( !validResponse )
-              {
-              quit = true;
-              }
-            else//>>>>>response is valid, response was either a command token to accept, or more input, look deeper...
-              {
-              if( !bln_accepted )//>>>>>if accepted is true, the input was the accept token, breech the loop
-                { quit = true; }
-              else//>>>>>append user input to the resulting speech to text buffer
-                { result += (result.Length > 0 ? " " : "") + user_response; }
-              }
-            }
-          //>>>>>if accepted, store value in VoiceBot variable supplied is arg0
-          if( bln_accepted )
-            {
-            BFS.Speech.TextToSpeech("Commander, response accepted.");
-            BFS.ScriptSettings.WriteValue(arrMethodArguments[0], result);
-            returnValue += ":" + result;
-            }
-          else
-            { returnValue = "cancelled"; }
-          }
-        }
-      else //>>>>>warn
-        {
-        VoiceArgcError(windowHandle, "Verbal Input Prompt(VIP)", numberOfSubParams, numberOfExpectedSubParams);
         returnValue = "error:{ERROR}".Replace("{ERROR}", "Invalid number of arguments.");
         }
       return returnValue;
@@ -931,7 +816,8 @@ namespace VoiceBotScriptTemplate
         //private static string assemplyPath = Path.GetDirectoryName(Uri.UnescapeDataString(new UriBuilder(Assembly.GetExecutingAssembly().CodeBase).Path));
         private static string appPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase);
 
-        public static string default_references = "System.dll | System.Core.dll |System.Data.dll | System.Drawing.dll | System.Management.dll | System.Web.dll | System.Windows.Forms.dll | System.Xml.dll | mscorlib.dll |  C:\\Program Files (x86)\\Reference Assemblies\\Microsoft\\Framework\\.NETFramework\\v4.0\\Profile\\Client\\Microsoft.CSharp.dll | C:\\Program Files (x86)\\Reference Assemblies\\Microsoft\\Framework\\.NETFramework\\v4.0\\Profile\\Client\\System.Speech.dll | C:\\Program Files (x86)\\Reference Assemblies\\Microsoft\\Framework\\.NETFramework\\v4.0\\Profile\\Client\\System.Data.Linq.dll".Replace("\\", "\\\\");
+        //public static string default_references = "System.dll | System.Core.dll |System.Data.dll | System.Drawing.dll | System.Management.dll | System.Web.dll | System.Windows.Forms.dll | System.Xml.dll | mscorlib.dll |  C:\\Program Files (x86)\\Reference Assemblies\\Microsoft\\Framework\\.NETFramework\\v4.0\\Profile\\Client\\Microsoft.CSharp.dll | C:\\Program Files (x86)\\Reference Assemblies\\Microsoft\\Framework\\.NETFramework\\v4.0\\Profile\\Client\\System.Speech.dll | C:\\Program Files (x86)\\Reference Assemblies\\Microsoft\\Framework\\.NETFramework\\v4.0\\Profile\\Client\\System.Data.Linq.dll".Replace("\\", "\\\\");
+        public static string default_references = "System.dll | System.Core.dll |System.Data.dll | System.Drawing.dll | System.Management.dll | System.Web.dll | System.Windows.Forms.dll | System.Xml.dll | mscorlib.dll |  C:\\Program Files (x86)\\Reference Assemblies\\Microsoft\\Framework\\.NETFramework\\v4.0\\Microsoft.CSharp.dll | C:\\Program Files (x86)\\Reference Assemblies\\Microsoft\\Framework\\.NETFramework\\v4.0\\System.Speech.dll | C:\\Program Files (x86)\\Reference Assemblies\\Microsoft\\Framework\\.NETFramework\\v4.0\\System.Data.Linq.dll".Replace("\\", "\\\\");
 
         public static string default_connection_string = "Provider='Microsoft.ACE.OLEDB.12.0'; Data Source='{PATH}LogBook.mdb'; Persist Security Info=False".Replace("{PATH}", (BFS.General.GetAppInstallPath() + "\\ScriptExtension\\")).Replace("\\", "\\\\");
         /*
@@ -973,6 +859,9 @@ namespace VoiceBotScriptTemplate
 //=============================================================================
 using System;
 using System.Drawing;
+using System.Reflection;
+using VoiceBotScriptTemplate;
+
 namespace Includes
 {
     public interface ITriggerLogic
@@ -983,10 +872,11 @@ namespace Includes
     public class TriggerLogic : ITriggerLogic
     {
       private bool _bln_result = true;
-      private string _error = ""ok"";
-      private string _diagnostics = """";
+      private string _error = ""init"";
+      private string _diagnostics = ""init"";
       public TriggerLogic()
-          {;}
+        {
+        }
       public bool Result{get{return(_bln_result);}}
       public string LastError{get{return(_error);}}
       public string DiagnosticsMessage{get{return(_diagnostics);}}
@@ -994,9 +884,10 @@ namespace Includes
 	    {
         try
             {
-		    {CODEBLOCK}
+		        {CODEBLOCK}
+            _error = ""ok"";
             }
-        catch(Exception error)
+            catch(Exception error)
             {
             _error = ""TriggerLogic: fail - {ERROR}."".Replace(""{ERROR}"", error.Message);
             }
@@ -1016,7 +907,7 @@ namespace Includes
           var assembly_trigger_logic = (Assembly)ScriptEngine.CsCodeAssembler(windowHandle, codeBlockName, sb_script_core.ToString(), references = "");
           dynamic obj_class = CreateClassInstance(assembly_trigger_logic, class_name, obj_parameters_array);
           object obj_return = obj_class.Run(windowHandle);
-
+          var diag = obj_class.DiagnosticsMessage;
           return (obj_return);
           }
 
@@ -1044,7 +935,15 @@ namespace Includes
           cp_compiler_params.GenerateInMemory = true;//<<--output in memmory vs output file
           cp_compiler_params.TreatWarningsAsErrors = false;//<<--warning handling
           cp_compiler_params.IncludeDebugInformation = true;
-          references += (references.Length > 0 ? "|" : "") + "C:\\Program Files (x86)\\VoiceBot\\VoiceBot.exe";//<<--add BFS library to the references
+          //references += (references.Length > 0 ? "|" : "") + "C:\\mnt\\I\\HOME\\Darkstrumn\\Documents\\Visual Studio 2015\\Projects\\VoiceBotScript2\\VoiceBotScript2\\bin\\Debug\\VoiceBotScript2.exe";//<<--add BFS library to the references
+          references += (references.Length > 0 ? "|" : "") + (Path.GetDirectoryName(new Uri(System.Reflection.Assembly.GetExecutingAssembly().Location).LocalPath) + "\\VoiceBotScript2.exe");//<<--add VoiceBotScriptTemplate.BFS library to the references
+          references += (references.Length > 0 ? "|" : "") + "C:\\Program Files (x86)\\VoiceBot\\VoiceBot.exe";//<<--add VoiceBot:BFS library to the references
+
+          //Assembly assem = Assembly.LoadFile("C:\\Program Files (x86)\\VoiceBot\\VoiceBot.exe");
+          //AssemblyName assemName = assem.GetName();
+          //Version ver = assemName.Version;
+          //System.Diagnostics.Debug.WriteLine("****VoiceBot.exe:: Application {0}, Version {1}", assemName.Name, ver.ToString());
+
           foreach( string reference in references.Split('|') )
             {
             System.Diagnostics.Debug.WriteLine("Adding reference: " + reference.Trim());
