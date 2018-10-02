@@ -20,15 +20,16 @@ using System.Xml; //<<--in references
 using Microsoft.CSharp; //<<--in system.dll
 
 //<references:>System.Core.dll |System.Data.dll | System.dll | System.Drawing.dll | System.Management.dll | System.Web.dll | System.Windows.Forms.dll | System.Xml.dll | mscorlib.dll | C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.1\Profile\Client\System.Speech.dll | C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.1\Profile\Client\System.Data.Linq.dll
+//<references:>System.dll | System.Core.dll |System.Data.dll | System.Drawing.dll | System.Management.dll | System.Web.dll | System.Windows.Forms.dll | System.Xml.dll | mscorlib.dll |  C:\Program Files(x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\Microsoft.CSharp.dll | C:\Program Files(x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Speech.dll | C:\Program Files(x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Data.Linq.dll
 //=============================================================================
 /*
  * Disclaimer:
  * This file is both for show & tell, and for documentation: an example  VoiceBot
- * script lab environment.
+ * script - lab environment.
  * 
- * Normally It is one class per file, however, as this is intended to not only be
- * functional, but to demonstrate voicebot sscript scaffolding and building using
- * the construct in the VisualStudio (2015) environment; so one file served the 
+ * Normally it's one class per file, however, as this is intended to not only be
+ * functional, but to demonstrate voicebot script scaffolding and building using
+ * the construct in the VisualStudio (2015-17) environment; so one file served the 
  * purpose.
  * Once in your build environment,
  * you can deconstuct the file into a proper project space one class per file, 
@@ -37,23 +38,24 @@ using Microsoft.CSharp; //<<--in system.dll
 //=============================================================================
 namespace VoiceBotScriptTemplate
   {
-  /*
-   * The VS environment is built as a console app, and the base class is the
-   * static class Program, with Main as the entry-point (typical)
-   * The VoiceBotScript class,located in the region marked main, is intended to
-   *  emulate the VoiceBot script space .Run(new IntPtr())  is the entry-point.
-   * 
-   * Once the script core is built, you should be able to copy, paste the region
-   * marked main, into the VoiceBot script editor (copy paste the refeerences
-   * string into the references input box, and make any "minor" adjustments for
-   * environment differences, and the script should work just as it did int he
-   * scaffold environment, with the benefit of the BFS calls doing their real
-   * work, registry manipulation, sendkeys, the whole-lot.
-   * 
-   * An entire complext macro script chain can be built here and tested outside of the VoiceBot system, however a 
-   * purchased VoiceBot install is required for references to work proper.
-   */
-  public static class Program
+    /*
+     * The VS environment is built as a console app, and the base class is the
+     * static class Program, with Main as the entry-point (typical)
+     * The VoiceBotScript class,located in the region marked main, is intended to
+     *  emulate the VoiceBot script space .Run(new IntPtr()) is the entry-point.
+     * 
+     * Once the script core is built, you should be able to copy, paste the region
+     * marked main, into the VoiceBot script editor (copy paste the refeerences
+     * string into the references input box, and make any "minor" adjustments for
+     * environment differences, and the script should work just as it did in the
+     * scaffold\build environment, with the benefit of the BFS calls doing their real
+     * work, registry manipulation, sendkeys, the whole-lot.
+     * 
+     * An entire complext macro script chain can be built here and tested outside of the VoiceBot system, however a 
+     * purchased VoiceBot install is required for references to work proper.
+     */
+    // Scaffold entry-point::
+    public static class Program
     {
     private static void Main(string[] args)
       {
@@ -197,11 +199,11 @@ namespace VoiceBotScriptTemplate
       public static string ReadValue(string variable_name)
         { /*<stub>*/
         var returnValue = "";
-        var fnd = lst_registry.IndexOf(new RegistryEntry() { Key = variable_name });
+        var found = lst_registry.IndexOf(new RegistryEntry() { Key = variable_name });
 
-        if( fnd != -1 )
+        if( found != -1 )
           {
-          returnValue = lst_registry[fnd].Dword;
+          returnValue = lst_registry[found].Dword;
           }
         else
           {
@@ -215,16 +217,16 @@ namespace VoiceBotScriptTemplate
       //---------------------------------------------------------------------
       public static void WriteValue(string variable_name, string variable_value)
         {/*<stub>*/
-        var fnd = lst_registry.IndexOf(new RegistryEntry() { Key = variable_name });
+        var found = lst_registry.IndexOf(new RegistryEntry() { Key = variable_name });
         //
-        if( fnd == -1 )
+        if( found == -1 )
           { lst_registry.Add(new RegistryEntry() { Key = variable_name, Dword = variable_value }); }
         else
           {
           if( variable_value.Length > 0 )
-            { lst_registry[fnd].Dword = variable_value; }
+            { lst_registry[found].Dword = variable_value; }
           else
-            { lst_registry.RemoveAt(fnd); }
+            { lst_registry.RemoveAt(found); }
           }
         Debug.WriteLine("**WriteValue(string {NAME}, string {VALUE})\\\\Fake Registry::".Replace("{NAME}", variable_name).Replace("{VALUE}", variable_value));
         foreach( RegistryEntry registry_entry in lst_registry )
@@ -264,7 +266,8 @@ namespace VoiceBotScriptTemplate
   //using System.Reflection;
   //using System.Text; //<<--provided by mscorlib.dll
   //using Microsoft.CSharp; //<<--in system.dll
-  //<references:>System.Core.dll |System.Data.dll | System.dll | System.Drawing.dll | System.Management.dll | System.Web.dll | System.Windows.Forms.dll | System.Xml.dll | mscorlib.dll | C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.1\Profile\Client\System.Speech.dll | C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.1\Profile\Client\System.Data.Linq.dll
+  //OLD<references:>System.Core.dll |System.Data.dll | System.dll | System.Drawing.dll | System.Management.dll | System.Web.dll | System.Windows.Forms.dll | System.Xml.dll | mscorlib.dll | C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.1\Profile\Client\System.Speech.dll | C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.1\Profile\Client\System.Data.Linq.dll
+  //CURRENT<references:>System.dll | System.Core.dll |System.Data.dll | System.Drawing.dll | System.Management.dll | System.Web.dll | System.Windows.Forms.dll | System.Xml.dll | mscorlib.dll |  C:\\Program Files (x86)\\Reference Assemblies\\Microsoft\\Framework\\.NETFramework\\v4.0\\Microsoft.CSharp.dll | C:\\Program Files (x86)\\Reference Assemblies\\Microsoft\\Framework\\.NETFramework\\v4.0\\System.Speech.dll | C:\\Program Files (x86)\\Reference Assemblies\\Microsoft\\Framework\\.NETFramework\\v4.0\\System.Data.Linq.dll
   //=============================================================================
 
   #region main
@@ -381,10 +384,10 @@ namespace VoiceBotScriptTemplate
           {
           args = (Dictionary<int, KeyValuePair<string, string>>)Includes.FxLib.GetArgs(ipc_var_name);
           BFS.Speech.TextToSpeech("The number of arguments found was " + args.Count.ToString());
-          //foreach ( KeyValuePair<int, KeyValuePair<string, string>> arg in (Dictionary<int, KeyValuePair<string, string>>)args )
-          //    {
-          //    BFS.Speech.TextToSpeech("argument {KEY} is {VALUE}.".Replace("{KEY}", arg.Value.Key.ToString()).Replace("{VALUE}", arg.Value.Value.ToString()));
-          //    }
+          //foreach( KeyValuePair<int, KeyValuePair<string, string>> arg in (Dictionary<int, KeyValuePair<string, string>>)args )
+          //  {
+          //  BFS.Speech.TextToSpeech("argument {KEY} is {VALUE}.".Replace("{KEY}", arg.Value.Key.ToString()).Replace("{VALUE}", arg.Value.Value.ToString()));
+          //  }
           }
         else
           {; }
@@ -860,7 +863,6 @@ namespace VoiceBotScriptTemplate
 using System;
 using System.Drawing;
 using System.Reflection;
-using VoiceBotScriptTemplate;
 
 namespace Includes
 {
@@ -905,10 +907,18 @@ namespace Includes
           code = code.Replace("{REFERENCES}", Includes.VoiceBotSupportClasses.Constants.default_references);
           sb_script_core.Append(code);
           var assembly_trigger_logic = (Assembly)ScriptEngine.CsCodeAssembler(windowHandle, codeBlockName, sb_script_core.ToString(), references = "");
-          dynamic obj_class = CreateClassInstance(assembly_trigger_logic, class_name, obj_parameters_array);
-          object obj_return = obj_class.Run(windowHandle);
-          var diag = obj_class.DiagnosticsMessage;
-          return (obj_return);
+          if( assembly_trigger_logic != null )
+            {
+            dynamic obj_class = CreateClassInstance(assembly_trigger_logic, class_name, obj_parameters_array);
+            object obj_return = obj_class.Run(windowHandle);
+            var diag = obj_class.DiagnosticsMessage;
+            return (obj_return);
+            }
+          else
+            {
+            System.Diagnostics.Debug.Print("**{codeBlockName} resulted in Null assembly.".Replace("{codeBlockName}", codeBlockName));
+            }
+          return null;
           }
 
         /// <summary>
@@ -936,7 +946,8 @@ namespace Includes
           cp_compiler_params.TreatWarningsAsErrors = false;//<<--warning handling
           cp_compiler_params.IncludeDebugInformation = true;
           //references += (references.Length > 0 ? "|" : "") + "C:\\mnt\\I\\HOME\\Darkstrumn\\Documents\\Visual Studio 2015\\Projects\\VoiceBotScript2\\VoiceBotScript2\\bin\\Debug\\VoiceBotScript2.exe";//<<--add BFS library to the references
-          references += (references.Length > 0 ? "|" : "") + (Path.GetDirectoryName(new Uri(System.Reflection.Assembly.GetExecutingAssembly().Location).LocalPath) + "\\VoiceBotScript2.exe");//<<--add VoiceBotScriptTemplate.BFS library to the references
+          //references += (references.Length > 0 ? "|" : "") + (Path.GetDirectoryName(new Uri(System.Reflection.Assembly.GetExecutingAssembly().Location).LocalPath) + "\\VoiceBotScript2.exe");//<<--add VoiceBotScriptTemplate.BFS library to the references
+          references += (references.Length > 0 ? "|" : "") + ((AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory).Replace("\\", "\\\\")) + "VoiceBotScript2.exe";//<<--add VoiceBotScriptTemplate.BFS library to the references
           references += (references.Length > 0 ? "|" : "") + "C:\\Program Files (x86)\\VoiceBot\\VoiceBot.exe";//<<--add VoiceBot:BFS library to the references
 
           //Assembly assem = Assembly.LoadFile("C:\\Program Files (x86)\\VoiceBot\\VoiceBot.exe");
@@ -944,10 +955,11 @@ namespace Includes
           //Version ver = assemName.Version;
           //System.Diagnostics.Debug.WriteLine("****VoiceBot.exe:: Application {0}, Version {1}", assemName.Name, ver.ToString());
 
-          foreach( string reference in references.Split('|') )
+          foreach( var reference in references.Split('|') )
             {
-            System.Diagnostics.Debug.WriteLine("Adding reference: " + reference.Trim());
-            cp_compiler_params.ReferencedAssemblies.Add(reference.Trim());
+            var conditioned_reference = reference.Replace("\\\\", "\\");
+            System.Diagnostics.Debug.WriteLine("Adding reference: " + conditioned_reference.Trim());
+            cp_compiler_params.ReferencedAssemblies.Add(conditioned_reference.Trim());
             }
 
           StringBuilder sb_script_core = new StringBuilder("");//<<--more flexible than string concatination if we add hardcoded library logic here

@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using Shouldly;
 using VoiceBotScriptTemplate.Includes.VoiceBotSupportClasses;
 using System;
 using System.Collections.Generic;
@@ -9,59 +10,94 @@ using VoiceBotScriptTemplate.Includes;
 using System.Reflection;
 
 namespace VoiceBotScriptTemplate.Includes.VoiceBotSupportClasses.Tests
-  {
-  [TestFixture()]
-  public class ScriptEngineTests
     {
-    [Test()]
-    public void EvalTest()
-      {
-      IntPtr windowHandle = new IntPtr();
-      var codeBlockName = "TriggerLogic";
-      var codeBlock = "_bln_result = (\"UnitTest\" + \"Passes\" == \"UnitTestPasses\");";
-      var codeBlockReferences = "";
+    [TestFixture(Description = "Script Engine Atomic Function Tests")]
+    public class ScriptEngineTests
+        {
+        [TestCase("TriggerLogic", "_bln_result = (\"UnitTest\" + \"Passes\" == \"UnitTestPasses\");\nVoiceBotScriptTemplate.BFS.Speech.TextToSpeech(\"Commander - Script Engine Eval Unit Test Passes.\");", "", ExpectedResult = true, Description = "Eval Test")]
+        public object Eval_Should_Return_True_Test(string codeBlockName, string codeBlock, string codeBlockReferences)
+            {
+            //ARRANGE
+            IntPtr windowHandle = new IntPtr();
 
-      var result = ScriptEngine.Eval(windowHandle, codeBlockName, codeBlock, codeBlockReferences);
-      Assert.AreEqual(result, true);
-      }
+            //ACT
+            var result = ScriptEngine.Eval(windowHandle, codeBlockName, codeBlock, codeBlockReferences);
 
-    [Test()]
-    public void BfsTest()
-      {
-      IntPtr windowHandle = new IntPtr();
-      var codeBlockName = "TriggerLogic";
-      var codeBlock = "_bln_result = (\"UnitTest\" + \"Passes\" == \"UnitTestPasses\");\nVoiceBotScriptTemplate.BFS.Speech.TextToSpeech(\"Commander - Unit Test Passes.\");";
-      var codeBlockReferences = "";
+            //ASSERT
+            result.ShouldNotBeNull();
+            return result;
+            }
 
-      var result = ScriptEngine.Eval(windowHandle, codeBlockName, codeBlock, codeBlockReferences);
-      Assert.AreEqual(result, true);
-      }
+        [Test(Description = "Bfs.Speech.TextToSpeech Access Test")]
+        [TestCase("TriggerLogic", "_bln_result = (\"UnitTest\" + \"Passes\" == \"UnitTestPasses\");\nVoiceBotScriptTemplate.BFS.Speech.TextToSpeech(\"Commander - BFS Speech TTS Unit Test Passes.\");", "", ExpectedResult = true, Description = "Bfs.Speech.TextToSpeech Access Test")]
+        public object Eval_Should_Have_Access_To_TTS_And_Return_True_Test(string codeBlockName, string codeBlock, string codeBlockReferences)
+            {
+            //ARRANGE
+            IntPtr windowHandle = new IntPtr();
 
-    [Test()]
-    public void BfsAliasTest()
-      {
-      IntPtr windowHandle = new IntPtr();
-      var codeBlockName = "TriggerLogic";
-      var codeBlock = "BFS.Speech.TextToSpeech(\"Commander - Voice Bot Script Template alias - Unit Test Passes.\");\n_bln_result = (\"UnitTest\" + \"Passes\" == \"UnitTestPasses\");";
-      var codeBlockReferences = "";
+            //ACT
+            var result = ScriptEngine.Eval(windowHandle, codeBlockName, codeBlock, codeBlockReferences);
 
-      var result = ScriptEngine.Eval(windowHandle, codeBlockName, codeBlock, codeBlockReferences);
-      Assert.AreEqual(result, true);
-      }
+            //ASSERT
+            result.ShouldNotBeNull();
+            return result;
+            }
 
-    [Test()]
-    public void CsCodeAssemblerTest()
-      {
-      IntPtr windowHandle = new IntPtr();
-      var codeBlockName = "TriggerLogic";
-      var codeBlock = "_bln_result = (\"UnitTest\" + \"Passes\" == \"UnitTestPasses\");";
-      var codeBlockReferences = "";
+        [Test(Description = "Bfs.ScriptSettings RW Access Test")]
+        [TestCase("TriggerLogic", "BFS.ScriptSettings.WriteValue(\"UnitTest\", \"UnitTestPasses\");_bln_result = (BFS.ScriptSettings.ReadValue(\"UnitTest\") == \"UnitTestPasses\");\nVoiceBotScriptTemplate.BFS.Speech.TextToSpeech(\"Commander - BFS Script Settings Read Write Unit Test Passes.\");", "", ExpectedResult = true, Description = "Bfs.ScriptSettings RW Access Test")]
+        public object Eval_Should_Have_RW_Access_To_Mock_Registry_And_Return_True_Test(string codeBlockName, string codeBlock, string codeBlockReferences)
+            {
+            //ARRANGE
+            IntPtr windowHandle = new IntPtr();
 
-      StringBuilder sb_script_core = new StringBuilder("");
-      var class_name = codeBlockName; //<<--alias for clarity
-      var function_name = "{CLASS}.Run".Replace("{CLASS}", class_name);
-      var code = "";
-      var code_template = @"
+            //ACT
+            var result = ScriptEngine.Eval(windowHandle, codeBlockName, codeBlock, codeBlockReferences);
+
+            //ASSERT
+            result.ShouldNotBeNull();
+            return result;
+            }
+
+        [Test(Description = "Bfs.Input.SendKeys Access Test")]
+        [TestCase("TriggerLogic", "_bln_result = (\"UnitTest\" + \"Passes\" == \"UnitTestPasses\");\nVoiceBotScriptTemplate.BFS.Input.SendKeys(\"Commander - SendKeys Unit Test Passes.\");\nVoiceBotScriptTemplate.BFS.Speech.TextToSpeech(\"Commander - BFS Input SendKeys Unit Test Passes.\");", "", ExpectedResult = true, Description = "Bfs.Input.SendKeys Access Test")]
+        public object Eval_Should_Have_SendKeys_Access_And_Return_True_Test(string codeBlockName, string codeBlock, string codeBlockReferences)
+            {
+            //ARRANGE
+            IntPtr windowHandle = new IntPtr();
+
+            //ACT
+            var result = ScriptEngine.Eval(windowHandle, codeBlockName, codeBlock, codeBlockReferences);
+
+            //ASSERT
+            result.ShouldNotBeNull();
+            return result;
+            }
+
+        [TestCase("TriggerLogic", "BFS.Speech.TextToSpeech(\"Commander - Voice Bot Script Template alias - Unit Test Passes.\");\n_bln_result = (\"UnitTest\" + \"Passes\" == \"UnitTestPasses\");", "", ExpectedResult = true, Description = "Bfs Alias Access Test")]
+        public object Eval_Should_Have_Access_To_BfsAlias_And_Return_True_Test(string codeBlockName, string codeBlock, string codeBlockReferences)
+            {
+            //ARRANGE
+            IntPtr windowHandle = new IntPtr();
+
+            //ACT
+            var result = ScriptEngine.Eval(windowHandle, codeBlockName, codeBlock, codeBlockReferences);
+
+            //ASSERT
+            result.ShouldNotBeNull();
+            return result;
+            }
+
+        [TestCase("TriggerLogic", "_bln_result = (\"UnitTest\" + \"Passes\" == \"UnitTestPasses\");", "", ExpectedResult = true, Description = "CsCodeAssembler Test")]
+        public object CsCodeAssembler_Should_Compile_And_Return_Valid_Assembly_Test(string codeBlockName, string codeBlock, string codeBlockReferences)
+            {
+            //ARRANGE
+            IntPtr windowHandle = new IntPtr();
+
+            StringBuilder sb_script_core = new StringBuilder("");
+            var class_name = codeBlockName; //<<--alias for clarity
+            var function_name = "{CLASS}.Run".Replace("{CLASS}", class_name);
+            var code = "";
+            var code_template = @"
 //=============================================================================
 //=={CODEBLOCKNAME} - Unit Test
 //=============================================================================
@@ -99,36 +135,39 @@ namespace Includes
 	    }
     }
 }";
-      /*
-      execute VHP's (variable hardpoints), allows us to add token handling to the code builder, can be a one-liner,
-      but is clearer broken down. Note: order is important.
-      */
-      code = code_template.Replace("{CODEBLOCK}", codeBlock);
-      code = code.Replace("{CODEBLOCKNAME}", codeBlockName);
-      code = code.Replace("{REFERENCES}", Includes.VoiceBotSupportClasses.Constants.default_references);
-      sb_script_core.Append(code);
-      var assembly_library_code = ScriptEngine.CsCodeAssembler(windowHandle, codeBlockName, sb_script_core.ToString(), codeBlockReferences);
-      Assert.IsNotNull(assembly_library_code);
-      }
+            /*
+            execute VHP's (variable hardpoints), allows us to add token handling to the code builder, can be a one-liner,
+            but is clearer broken down. Note: order is important.
+            */
+            code = code_template.Replace("{CODEBLOCK}", codeBlock);
+            code = code.Replace("{CODEBLOCKNAME}", codeBlockName);
+            code = code.Replace("{REFERENCES}", Includes.VoiceBotSupportClasses.Constants.default_references);
+            sb_script_core.Append(code);
 
-    [Test()]
-    public void CreateClassInstanceTest()
-      {
-      IntPtr windowHandle = new IntPtr();
-      var codeBlockName = "TriggerLogic";
-      var codeBlock = "_bln_result = (\"UnitTest\" + \"Passes\" == \"UnitTestPasses\");";
-      var codeBlockReferences = "";
+            //ACT
+            var assembly_library_code = ScriptEngine.CsCodeAssembler(windowHandle, codeBlockName, sb_script_core.ToString(), codeBlockReferences);
 
-      StringBuilder sb_script_core = new StringBuilder("");
-      var obj_parameters_array = new object[] { };
-      var class_name = codeBlockName; //<<--alias for clarity
-      var function_name = "{CLASS}.Run".Replace("{CLASS}", class_name);
-      var code = "";
+            //ASSERT
+            assembly_library_code.ShouldNotBeNull();
+            return (assembly_library_code != null);
+            }
 
-      var fullname = "Includes." + class_name;
-      var bln_ignore_case = false;
+        [TestCase("TriggerLogic", "_bln_result = (\"UnitTest\" + \"Passes\" == \"UnitTestPasses\");", "", ExpectedResult = true, Description = "ClassInstance Test")]
+        public object CreateClassInstance_Should_Return_Class_Instance_Test(string codeBlockName, string codeBlock, string codeBlockReferences)
+            {
+            //ARRANGE
+            IntPtr windowHandle = new IntPtr();
 
-      var code_template = @"
+            StringBuilder sb_script_core = new StringBuilder("");
+            var obj_parameters_array = new object[] { };
+            var class_name = codeBlockName; //<<--alias for clarity
+            var function_name = "{CLASS}.Run".Replace("{CLASS}", class_name);
+            var code = "";
+
+            var fullname = "Includes." + class_name;
+            var bln_ignore_case = false;
+
+            var code_template = @"
 //=============================================================================
 //=={CODEBLOCKNAME} - Unit Test
 //=============================================================================
@@ -166,40 +205,44 @@ namespace Includes
 	    }
     }
 }";
-      /*
-      execute VHP's (variable hardpoints), allows us to add token handling to the code builder, can be a one-liner,
-      but is clearer broken down. Note: order is important.
-      */
-      code = code_template.Replace("{CODEBLOCK}", codeBlock);
-      code = code.Replace("{CODEBLOCKNAME}", codeBlockName);
-      code = code.Replace("{REFERENCES}", Includes.VoiceBotSupportClasses.Constants.default_references);
-      sb_script_core.Append(code);
-      System.Reflection.BindingFlags flags = (BindingFlags.Public | BindingFlags.Instance);
-      var assembly_library_code = ScriptEngine.CsCodeAssembler(windowHandle, codeBlockName, sb_script_core.ToString(), codeBlockReferences);
-      dynamic obj_class = (dynamic)ScriptEngine.CreateClassInstance(assembly_library_code, class_name, obj_parameters_array);
-      var classInstance = assembly_library_code.CreateInstance(fullname, bln_ignore_case, flags, null, obj_parameters_array, null, new object[] { });
-      Assert.IsNotNull(classInstance);
-      }
+            /*
+            execute VHP's (variable hardpoints), allows us to add token handling to the code builder, can be a one-liner,
+            but is clearer broken down. Note: order is important.
+            */
+            code = code_template.Replace("{CODEBLOCK}", codeBlock);
+            code = code.Replace("{CODEBLOCKNAME}", codeBlockName);
+            code = code.Replace("{REFERENCES}", Includes.VoiceBotSupportClasses.Constants.default_references);
+            sb_script_core.Append(code);
+            System.Reflection.BindingFlags flags = (BindingFlags.Public | BindingFlags.Instance);
+            var assembly_library_code = ScriptEngine.CsCodeAssembler(windowHandle, codeBlockName, sb_script_core.ToString(), codeBlockReferences);
+            dynamic obj_class = (dynamic)ScriptEngine.CreateClassInstance(assembly_library_code, class_name, obj_parameters_array);
 
-    [Test()]
-    public void CallFunctionTest()
-      {
-      IntPtr windowHandle = new IntPtr();
-      var codeBlockName = "TriggerLogic";
-      var codeBlock = "_bln_result = (\"UnitTest\" + \"Passes\" == \"UnitTestPasses\");";
-      var codeBlockReferences = "";
+            //ACT
+            var classInstance = assembly_library_code.CreateInstance(fullname, bln_ignore_case, flags, null, obj_parameters_array, null, new object[] { });
 
-      StringBuilder sb_script_core = new StringBuilder("");
-      var obj_parameters_array = new object[] { windowHandle };
-      var class_name = codeBlockName; //<<--alias for clarity
-      var function_name = "Run";
-      var fullFunction_name = "{CLASS}.{FUNCTION}".Replace("{CLASS}", class_name).Replace("{FUNCTION}", function_name);
-      var code = "";
+            //ASSERT
+            //<MSTest>Assert.IsNotNull(classInstance);
+            classInstance.ShouldNotBeNull();
+            return (classInstance != null);
+            }
 
-      var fullname = "Includes." + class_name;
-      var bln_ignore_case = false;
+        [TestCase("TriggerLogic", "_bln_result = (\"UnitTest\" + \"Passes\" == \"UnitTestPasses\");", "", ExpectedResult = true, Description = "Compiled Function Call Test")]
+        public object CallFunction_Should_Compile_And_Invoke_Method_And_Return_True_Test(string codeBlockName, string codeBlock, string codeBlockReferences)
+            {
+            //ARRANGE
+            IntPtr windowHandle = new IntPtr();
 
-      var code_template = @"
+            StringBuilder sb_script_core = new StringBuilder("");
+            var obj_parameters_array = new object[] { windowHandle };
+            var class_name = codeBlockName; //<<--alias for clarity
+            var function_name = "Run";
+            var fullFunction_name = "{CLASS}.{FUNCTION}".Replace("{CLASS}", class_name).Replace("{FUNCTION}", function_name);
+            var code = "";
+
+            var fullname = "Includes." + class_name;
+            //var bln_ignore_case = false;
+
+            var code_template = @"
 //=============================================================================
 //=={CODEBLOCKNAME} - Unit Test
 //=============================================================================
@@ -237,63 +280,84 @@ namespace Includes
 	    }
     }
 }";
-      /*
-      execute VHP's (variable hardpoints), allows us to add token handling to the code builder, can be a one-liner,
-      but is clearer broken down. Note: order is important.
-      */
-      code = code_template.Replace("{CODEBLOCK}", codeBlock);
-      code = code.Replace("{CODEBLOCKNAME}", codeBlockName);
-      code = code.Replace("{REFERENCES}", Includes.VoiceBotSupportClasses.Constants.default_references);
-      sb_script_core.Append(code);
+            /*
+            execute VHP's (variable hardpoints), allows us to add token handling to the code builder, can be a one-liner,
+            but is clearer broken down. Note: order is important.
+            */
+            code = code_template.Replace("{CODEBLOCK}", codeBlock);
+            code = code.Replace("{CODEBLOCKNAME}", codeBlockName);
+            code = code.Replace("{REFERENCES}", Includes.VoiceBotSupportClasses.Constants.default_references);
+            sb_script_core.Append(code);
 
-      var assembly_library_code = ScriptEngine.CsCodeAssembler(windowHandle, codeBlockName, sb_script_core.ToString(), codeBlockReferences);
-      var classInstance = assembly_library_code.CreateInstance(fullname);
-      var type_instance_type = classInstance.GetType();
-      var method_info = type_instance_type.GetMethods().Where(m => m.Name == function_name).FirstOrDefault();
+            var assembly_library_code = ScriptEngine.CsCodeAssembler(windowHandle, codeBlockName, sb_script_core.ToString(), codeBlockReferences);
+            var classInstance = assembly_library_code.CreateInstance(fullname);
+            var type_instance_type = classInstance.GetType();
+            var method_info = type_instance_type.GetMethods().Where(m => m.Name == function_name).FirstOrDefault();
 
-      object obj_return = method_info.Invoke(classInstance, obj_parameters_array);
-      Assert.IsTrue((bool)obj_return);//<<--expected object for this test is a bool true for the logic:'_bln_result = ("UnitTest" + "Passes" == "UnitTestPasses");'
-      }
 
-    //[Test()]
-    //public void GetIncludeTest()
-    //  {
-    //  IntPtr windowHandle = new IntPtr();
-    //  var include = "Include_DarkLibs";
-    //  var references = Constants.default_references;
-    //  var includeScript = BFS.ScriptSettings.ReadValue(include);
-    //  var result = ((Assembly)ScriptEngine.GetInclude(windowHandle, include, references)).GetTypes().Where(x => x.FullName.Contains("Includes.Speech")).ToArray<Type>()[0];
-    //  Assert.AreEqual(result.FullName, "Includes.Speech");
-    //  }
+            //ACT
+            object obj_return = method_info.Invoke(classInstance, obj_parameters_array);
 
-    [Test()]
-    public void Base64DecodeTest()
-      {
-      var testData = "Unit Test";
-      var encodedData = ScriptEngine.Base64Encode(testData);
-      var decodedData = ScriptEngine.Base64Decode(encodedData);
+            //ASSERT
+            //<MSTest>Assert.IsTrue((bool)obj_return);//<<--expected object for this test is a bool true for the logic:'_bln_result = ("UnitTest" + "Passes" == "UnitTestPasses");'
+            obj_return.ShouldNotBeNull();//<<--expected object for this test is a bool true for the logic:'_bln_result = ("UnitTest" + "Passes" == "UnitTestPasses");'
+            return (obj_return);
+            }
 
-      Assert.AreEqual(testData, decodedData);
-      }
+        //[Test()]
+        //public void GetIncludeTest()
+        //  {
+        //  IntPtr windowHandle = new IntPtr();
+        //  var include = "Include_DarkLibs";
+        //  var references = Constants.default_references;
+        //  var includeScript = BFS.ScriptSettings.ReadValue(include);
+        //  var result = ((Assembly)ScriptEngine.GetInclude(windowHandle, include, references)).GetTypes().Where(x => x.FullName.Contains("Includes.Speech")).ToArray<Type>()[0];
+        //  Assert.AreEqual(result.FullName, "Includes.Speech");
+        //  }
 
-    [Test()]
-    public void Base64EncodeTest()
-      {
-      var testData = "Unit Test";
-      var encodedData = ScriptEngine.Base64Encode(testData);
+        [TestCase("Unit Test", ExpectedResult = true, Description = "Base64Encode Encoder Test")]
+        public object Base64Encode_Should_Encode_Proper_Test(string inputData)
+            {
+            //ARRANGE
+            var testData = inputData;
 
-      Assert.IsNotEmpty(encodedData);
-      Assert.AreNotEqual(testData, encodedData);
-      }
+            //ACT
+            var encodedData = ScriptEngine.Base64Encode(testData);
 
-    [Test()]
-    public void LoadIncludeTest()
-      {
-      IntPtr windowHandle = new IntPtr();
-      var include = "Include_DarkLibs";
-      var references = Constants.default_references;
-      var result = ((Assembly)ScriptEngine.LoadInclude(windowHandle, include, references)).GetTypes().Where(x => x.FullName.Contains("Includes.Speech")).ToArray<Type>()[0];
-      Assert.AreEqual(result.FullName, "Includes.Speech");
-      }
+            //ASSERT
+            encodedData.ShouldNotBeEmpty();
+            return (encodedData != testData);
+            }
+
+        [TestCase("Unit Test", ExpectedResult = "Unit Test", Description = "Base64Decode Decode Test")]
+        public object Base64Decode_Should_Decode_Proper_Test(string inputData)
+            {
+            //ARRANGE
+            var testData = inputData;
+            var encodedData = ScriptEngine.Base64Encode(testData);
+
+            //ACT
+            var decodedData = ScriptEngine.Base64Decode(encodedData);
+
+            //ASSERT
+            decodedData.ShouldNotBeEmpty();
+            decodedData.ShouldNotBe(encodedData);
+            return decodedData;
+            }
+
+        [TestCase("Include_DarkLibs", ExpectedResult = "Includes.Speech", Description = "LoadInclude Load Test")]
+        public object LoadInclude_Should_Load_Include_And_FullName_Should_Match_Include_Test(string include)
+            {
+            //ARRANGE
+            IntPtr windowHandle = new IntPtr();
+            var references = Constants.default_references;
+
+            //ACT
+            var result = ((Assembly)ScriptEngine.LoadInclude(windowHandle, include, references)).GetTypes().Where(x => x.FullName.Contains("Includes.Speech")).ToArray<Type>()[0];
+
+            //ASSERT
+            result.FullName.ShouldNotBeNull();
+            return result.FullName;
+            }
+        }
     }
-  }
